@@ -2,6 +2,7 @@ package util;
 
 import java.util.Collection;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -28,20 +29,20 @@ interface Traversable<E> {
 
      int count(Predicate<? super E> filter);
 
-     E foldLeft(E e, BiFunction<E, E, E> function);
+     E foldLeft(E e, BinaryOperator<E> function);
 
-     E foldRight(E e, BiFunction<E, E, E> function);
+     E foldRight(E e, BinaryOperator<E> function);
 
-     <R> R foldLeft(E e, Function<E, R> er, BiFunction<E, R, R> err);
+     <R> R foldLeft(R r, BiFunction<R, ? super E, R> err);
 
-     <R> R foldRight(E e, Function<E, R> er, BiFunction<E, R, R> err);
+     <R> R foldRight(R r, BiFunction<R, ? super E, R> err);
 
-     E reduceLeft(BiFunction<E, E, E> function);
+     E reduceLeft(BinaryOperator<E> function);
 
-     E reduceRight(BiFunction<E, E, E> function);
+     E reduceRight(BinaryOperator<E> function);
 
-     <R> R reduceLeft(Function<E, R> er, BiFunction<E, R, R> err);
+     <R> R reduceLeft(Function<E, R> er, BiFunction<R, ? super E, R> err);
 
-     <R> R reduceRight(Function<E, R> er, BiFunction<E, R, R> err);
+     <R> R reduceRight(Function<E, R> er, BiFunction<R, ? super E, R> err);
 
 }

@@ -1,5 +1,7 @@
 package util;
 
+import util.stream.Stream;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;

@@ -1,10 +1,7 @@
-package util;
+package util.stream;
 
 import java.util.Collection;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 
 public interface Stream<E> {
     void sink(Consumer<? super E> collector);
@@ -36,12 +33,7 @@ public interface Stream<E> {
 
     int count(Predicate<? super E> filter);
 
-    E fold(E e, BiFunction<E, E, E> function);
+    <R> R fold(R r, BiFunction<R, ? super E, R> accumulator);
 
-    <R> R fold(E e, Function<E, R> er, BiFunction<E, R, R> err);
-
-    E reduce(BiFunction<E, E, E> function);
-
-    <R> R reduce(Function<E, R> er, BiFunction<E, R, R> err);
-
+    <R> R reduce(BiFunction<R, ? super E, R> err);
 }

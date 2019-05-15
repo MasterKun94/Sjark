@@ -1,6 +1,5 @@
-package util;
+package util.stream;
 
-import util.Tools.Copy;
 import util.Tools.ThisOrElse;
 
 import java.util.ArrayList;
@@ -8,23 +7,23 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.*;
 
-public class BaseStream<E> implements Stream<E> {
+public class StreamPipeline<E> implements Stream<E> {
 
     private Consumer<Consumer<? super E>> sourceApplier;
 
-    private BaseStream(Consumer<Consumer<? super E>> consumer) {
+    public StreamPipeline(Consumer<Consumer<? super E>> consumer) {
         this.sourceApplier = consumer;
     }
 
-    private BaseStream(Collection<E> source) {
+    public StreamPipeline(Collection<E> source) {
         this.sourceApplier = source::forEach;
     }
 
-    private BaseStream(Supplier<E> supplier) {
+    public StreamPipeline(Supplier<E> supplier) {
         this.sourceApplier = eConsumer -> eConsumer.accept(supplier.get());
     }
 
-    private BaseStream(E e) {
+    public StreamPipeline(E e) {
         this.sourceApplier = eConsumer -> eConsumer.accept(e);
     }
 
@@ -38,32 +37,32 @@ public class BaseStream<E> implements Stream<E> {
         Consumer<Consumer<? super R>> applier = rConsumer -> {
             sourceApplier.accept(e -> rConsumer.accept(mapper.apply(e)));
         };
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
-    public <R> BaseStream<R> streamMap(Function<? super E, ? extends Stream<? extends R>> mapper) {
+    public <R> StreamPipeline<R> streamMap(Function<? super E, ? extends Stream<? extends R>> mapper) {
         Consumer<Consumer<? super R>> applier = rConsumer -> {
             sourceApplier.accept(e -> mapper.apply(e).sink(rConsumer));
         };
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
     public <R> Stream<R> flatMap(Function<? super E, ? extends Collection<? extends R>> flatMapper) {
-        Function<? super E, ? extends BaseStream<? extends R>> mapper = flatMapper.andThen(BaseStream::new);
+        Function<? super E, ? extends StreamPipeline<? extends R>> mapper = flatMapper.andThen(StreamPipeline::new);
         return streamMap(mapper);
     }
 
     @Override
-    public BaseStream<E> filter(Predicate<? super E> predicate) {
+    public StreamPipeline<E> filter(Predicate<? super E> predicate) {
         Consumer<Consumer<? super E>> applier = eConsumer -> sourceApplier.accept(
                 ThisOrElse.acceptThis(predicate, eConsumer));
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
-    public BaseStream<E> filterNot(Predicate<? super E> predicate) {
+    public StreamPipeline<E> filterNot(Predicate<? super E> predicate) {
         return filter(predicate.negate());
     }
 
@@ -78,7 +77,7 @@ public class BaseStream<E> implements Stream<E> {
                 }
             });
         };
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
@@ -91,7 +90,7 @@ public class BaseStream<E> implements Stream<E> {
                 eConsumer.accept(e);
             }
         });
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
@@ -103,7 +102,7 @@ public class BaseStream<E> implements Stream<E> {
                 count[0]++;
             }
         });
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
@@ -116,7 +115,7 @@ public class BaseStream<E> implements Stream<E> {
                 eConsumer.accept(e);
             }
         });
-        return new BaseStream<>(applier);
+        return new StreamPipeline<>(applier);
     }
 
     @Override
@@ -143,33 +142,19 @@ public class BaseStream<E> implements Stream<E> {
         return count[0];
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public E fold(E e, BiFunction<E, E, E> function) {
-        E e1 = Copy.doCopy(e);
-        Consumer<? super E> combiner = e2 -> function.apply(e2, e1);
+    public <R> R fold(R r, BiFunction<R, ? super E, R> accumulator) {
+        final R[] ele = (R[]) new Object[]{r};
+        Consumer<? super E> combiner = e -> ele[0] = accumulator.apply(ele[0], e);
         sourceApplier.accept(combiner);
-        return e1;
+        return r;
     }
 
     @Override
-    public <R> R fold(E e, Function<E, R> er, BiFunction<E, R, R> err) {
-        R e1 = er.apply(e);
-        Consumer<? super E> combiner = e2 -> err.apply(e2, e1);
-        sourceApplier.accept(combiner);
-        return e1;
-    }
-
-    @Override
-    public E reduce(BiFunction<E, E, E> function) {
+    public <R> R reduce(BiFunction<R, ? super E, R> err) {
         return null;
     }
-
-    @Override
-    public <R> R reduce(Function<E, R> er, BiFunction<E, R, R> err) {
-        return null;
-    }
-
-
 
     public static void main(String[] args) {
         List<Integer> integers = new ArrayList<>();
@@ -177,7 +162,7 @@ public class BaseStream<E> implements Stream<E> {
             integers.add(i);
         }
         List<String> strings = new ArrayList<>();
-        BaseStream<Integer> stringStream = new BaseStream<>(integers);
+        StreamPipeline<Integer> stringStream = new StreamPipeline<>(integers);
         stringStream.map(i -> i * i)
                 .map(i -> "\n\ti 的平方是: " + i)
                 .flatMap(s -> {
