@@ -11,16 +11,11 @@ public class Sjark<E> {
         this.supplier = supplier;
     }
 
-    private Consumer<E> consumer;
-
     private Supplier<E> supplier;
 
     public <R> Sjark<R> thenDo(Function<? super E, ? extends R> mapper) {
-
         Supplier<R> newSupplier = () -> mapper.apply(supplier.get());
-        Sjark<R> newJsark = new Sjark<>(newSupplier);
-        consumer = e -> newJsark.consumer.accept(mapper.apply(e));
-        return newJsark;
+        return new Sjark<>(newSupplier);
     }
 
     public SjarkIf<E> ifThis(Predicate<? super E> predicate) {
