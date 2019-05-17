@@ -13,9 +13,9 @@ public class SjarkIf<E> {
 
     private Predicate<? super E> predicate;
 
-    private SjarkPip<E, ?> thisPip;
+    private SjarkPip<E> thisPip;
 
-    private SjarkPip<E, ?> thatPip;
+    private SjarkPip<E> thatPip;
 
 
     public Sjark<E> then() {
@@ -32,10 +32,7 @@ public class SjarkIf<E> {
 
     private Supplier<E> supplier;
 
-    public Consumer<Supplier<E>> getConsumer() {
-        return supplier -> {
-            E e = supplier.get();
-            (predicate.test(e) ? thisPip.getConsumer() : thatPip.getConsumer()).accept(supplier);//TODO
-        };
+    public Consumer<E> getConsumer() {
+        return e -> (predicate.test(e) ? thisPip.getConsumer() : thatPip.getConsumer()).accept(e);//TODO
     }
 }

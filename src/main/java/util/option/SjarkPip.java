@@ -4,26 +4,36 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class SjarkPip<E, R> {
-    public SjarkPip(Supplier<E> supplier) {
-        this.supplier = supplier;
+public class SjarkPip<E> implements Sjark<E> {
+
+    private Supplier<Consumer<E>> pip;
+
+    public Consumer<E> getPip() {
+        return pip.get();
     }
 
-    private Consumer<E> consumer;
-
-    private SjarkPip<R, ?> nextPip;
-
-    private Supplier<E> supplier;
-
-    private Function<E, R> mapper;
-
-    public Consumer<Supplier<E>> getConsumer() {
-        return supplier -> nextPip.getConsumer().accept(() -> mapper.apply(supplier.get()));
+    public Sjark<E> sink(Consumer<E> sink) {
+        pip = () -> sink;
+        return this;
     }
 
-    public SjarkPip<R, ?> map(Function<? super E, ? extends R> mapper) {
-        Supplier<R> newSupplier = () -> mapper.apply(supplier.get());
-        nextPip = new SjarkPip<>(newSupplier);
+    public <R> Sjark<R> map(Function<? super E, ? extends R> mapper) {
+//        Supplier<R> newSupplier = () -> mapper.apply(supplier.get());
+        SjarkPip<R> nextPip = new SjarkPip<>();
+        pip = () -> e -> nextPip.getPip().accept(mapper.apply(e));
         return nextPip;
+    }
+
+    public static void main(String[] args) {
+        Sjark<Integer> integerSjark = new SjarkPip<>();
+        integerSjark
+                .map(integer -> integer * 2)
+//                .map(integer -> integer.compareTo(123123))
+                .map(Object::toString)
+                .map(String::hashCode)
+                .map(Object::toString)
+                .map(String::toUpperCase)
+                .sink(System.out::println);
+        integerSjark.getPip().accept(123123);
     }
 }
