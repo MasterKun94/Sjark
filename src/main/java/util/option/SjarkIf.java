@@ -7,32 +7,25 @@ import java.util.function.Supplier;
 
 public class SjarkIf<E> {
 
-    public SjarkIf(Predicate<? super E> predicate, Supplier<E> sjarkSupplier) {
-        this.predicate = predicate;
+    private Predicate<? super E> ifElse;
+    private Sjark<E> thisSjark;
+    private Sjark<E> thatSjark;
+
+    public SjarkIf(Predicate<? super E> predicate) {
+        ifElse = predicate;
+        thisSjark = new SjarkPip<>();
+        thatSjark = new SjarkPip<>();
     }
 
-    private Predicate<? super E> predicate;
-
-    private SjarkPip<E> thisPip;
-
-    private SjarkPip<E> thatPip;
-
-
     public Sjark<E> then() {
-        return null;
+        return thatSjark;
     }
 
     public Sjark<E> orElse() {
-        return null;
+        return thatSjark;
     }
 
-    private Consumer<E> thisConsumer;
-
-    private Consumer<E> thatConsumer;
-
-    private Supplier<E> supplier;
-
-    public Consumer<E> getConsumer() {
-        return e -> (predicate.test(e) ? thisPip.getConsumer() : thatPip.getConsumer()).accept(e);//TODO
+    public Consumer<E> getPip() {
+        return e -> (ifElse.test(e) ? thisSjark.getPip() : thatSjark.getPip()).accept(e);//TODO
     }
 }

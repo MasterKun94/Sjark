@@ -2,6 +2,7 @@ package util.option;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class SjarkPip<E> implements Sjark<E> {
@@ -18,11 +19,18 @@ public class SjarkPip<E> implements Sjark<E> {
     }
 
     public <R> Sjark<R> map(Function<? super E, ? extends R> mapper) {
-//        Supplier<R> newSupplier = () -> mapper.apply(supplier.get());
         SjarkPip<R> nextPip = new SjarkPip<>();
         pip = () -> e -> nextPip.getPip().accept(mapper.apply(e));
         return nextPip;
     }
+
+    public SjarkIf<E> sjarkIf(Predicate<E> it) {
+        SjarkIf<E> sjarkIf = new SjarkIf<>(it);
+        pip = () -> e -> sjarkIf.getPip().accept(e);
+        return sjarkIf;
+    }
+
+
 
     public static void main(String[] args) {
         Sjark<Integer> integerSjark = new SjarkPip<>();
