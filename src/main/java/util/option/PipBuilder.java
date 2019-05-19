@@ -1,20 +1,17 @@
 package util.option;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class PipBuilder<T, E> {
-    private List<Sjark> sjarkStack;
-    private List<SjarkIf> sjarkIfStack;
     private Supplier<Consumer<T>> pipGetter;
     private Supplier<T> source;
     private Sjark<E> sjark;
 
-    public static <R> PipBuilder<R, R> of(Supplier<R> supplier) {
+    public static <R> PipBuilder<R, R> withNullSource() {
         PipBuilder<R, R> builder = new PipBuilder<>();
-        builder.source = supplier;
         builder.sjark = new Sjark<>();
         builder.pipGetter = builder.sjark::getPip;
         return builder;
@@ -32,24 +29,30 @@ public class PipBuilder<T, E> {
         return of(this, sj -> sj._do(mapper));
     }
 
-    public PipBuilder<T, E> _if(SjarkIf<E> sjarkIf) {
-        return of(this, sj -> sj._if(sjarkIf)._then());
+    public <R> PipBuilder<T, E> _if(Predicate<E> predicate, Function<PipBuilder<E, E>, PipBuilder<E, R>> then, Function<PipBuilder<E, E>, PipBuilder<E, R>> orElse) {
+        Sjark<E> sjark = new Sjark<>();
+        sjark._if(predicate)
+                ._then(then.apply(withNullSource()).pipGetter.get())
+                ._else(orElse.apply(withNullSource()).pipGetter.get());
+        return _return(sjark.getPip());
     }
 
     public PipBuilder<T, E> _else(SjarkIf<E> sjarkIf) {
-        return of(this, sj -> sj._if(sjarkIf)._else());
+//        return of(this, sj -> sj._if(sjarkIf)._else());
+        return null;
     }
 
     public PipBuilder<T, E> _while(SjarkIf<E> sjarkIf) {
-        return _if(sjarkIf);
+        return null;
     }
 
     public PipBuilder<T, E> _return(SjarkIf<E> sjarkIf) {
-        this.sjark._goto(sjarkIf);
-        return _else(sjarkIf);
+//        this.sjark._goto(sjarkIf);
+//        return _else(sjarkIf);
+        return null;
     }
 
     public PipBuilder<T, E> _return(Consumer<E> consumer) {
-        return null;
+        return of(this, sj -> sj._return(consumer));
     }
 }

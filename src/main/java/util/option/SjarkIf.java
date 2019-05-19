@@ -6,24 +6,24 @@ import java.util.function.Predicate;
 public class SjarkIf<E> {
 
     private Predicate<? super E> ifElse;
-    private Sjark<E> thisSjark;
-    private Sjark<E> thatSjark;
+    private Consumer<E> thisConsumer;
+    private Consumer<E> thatConsumer;
 
     public SjarkIf(Predicate<? super E> predicate) {
         ifElse = predicate;
-        thisSjark = new Sjark<>();
-        thatSjark = new Sjark<>();
     }
 
-    public Sjark<E> _then() {
-        return thatSjark;
+    public SjarkIf<E> _then(Consumer<E> thisConsumer) {
+        this.thisConsumer = thisConsumer;
+        return this;
     }
 
-    public Sjark<E> _else() {
-        return thatSjark;
+    public SjarkIf<E> _else(Consumer<E> thatConsumer) {
+        this.thatConsumer = thatConsumer;
+        return this;
     }
 
     public Consumer<E> getPip() {
-        return e -> (ifElse.test(e) ? thisSjark.getPip() : thatSjark.getPip()).accept(e);//TODO
+        return e -> (ifElse.test(e) ? thisConsumer : thatConsumer).accept(e);//TODO
     }
 }

@@ -17,13 +17,23 @@ public class Sjark<E> {
         return this;
     }
 
+    public Sjark<E> _declare(Consumer<? super E> doer) {
+        Sjark<E> nextSjark = new Sjark<>();
+        pip = e -> {
+            doer.accept(e);
+            nextSjark.pip.accept(e);
+        };
+        return nextSjark;
+    }
+
     public <R> Sjark<R> _do(Function<? super E, ? extends R> mapper) {
         Sjark<R> nextSjark = new Sjark<>();
         pip = e -> nextSjark.pip.accept(mapper.apply(e));
         return nextSjark;
     }
 
-    public SjarkIf<E> _if(SjarkIf<E> sjarkIf) {
+    public SjarkIf<E> _if(Predicate<E> predicate) {
+        SjarkIf<E> sjarkIf = new SjarkIf<>(predicate);
         pip = e -> sjarkIf.getPip().accept(e);
         return sjarkIf;
     }
@@ -38,10 +48,6 @@ public class Sjark<E> {
         return this;
     }
 
-    public Sjark<E> _goto(SjarkIf<E> sjarkIf) {
-        pip = sjarkIf.getPip();
-        return this;
-    }
 
 
 
@@ -53,9 +59,13 @@ public class Sjark<E> {
                 ._do(Object::toString)
                 ._do(String::hashCode)
                 ._do(integer -> integer * 31 + 19)
-                ._do(Object::toString)
-                ._do(String::toUpperCase)
-                ._return(System.out::println);
+                ._if(i -> i > 0)
+                ._then(
+                        System.out::println
+                )._else(
+                        i -> System.out.println(123123)
+                );
+
         integerSjark.getPip().accept(123123);
     }
 }
