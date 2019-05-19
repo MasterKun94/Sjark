@@ -17,42 +17,53 @@ public class PipBuilder<T, E> {
         return builder;
     }
 
-    private static <T, R, E> PipBuilder<T, R> of(PipBuilder<T, E> builder, Function<Sjark<E>, Sjark<R>> sjarkMapper) {
+    private static <T, R, E> PipBuilder<T, R> with(PipBuilder<T, E> builder, Function<Sjark<E>, Sjark<R>> sjarkMapper) {
         PipBuilder<T, R> newBuilder = new PipBuilder<>();
         newBuilder.pipGetter = builder.pipGetter;
         newBuilder.source = builder.source;
         newBuilder.sjark = sjarkMapper.apply(builder.sjark);
+
         return newBuilder;
     }
 
     public <R> PipBuilder<T, R> _do(Function<E, R> mapper) {
-        return of(this, sj -> sj._do(mapper));
+        return with(this, sj -> sj._do(mapper));
     }
 
-    public <R> PipBuilder<T, E> _if(Predicate<E> predicate, Function<PipBuilder<E, E>, PipBuilder<E, R>> then, Function<PipBuilder<E, E>, PipBuilder<E, R>> orElse) {
-        Sjark<E> sjark = new Sjark<>();
-        sjark._if(predicate)
-                ._then(then.apply(withNullSource()).pipGetter.get())
-                ._else(orElse.apply(withNullSource()).pipGetter.get());
-        return _return(sjark.getPip());
-    }
-
-    public PipBuilder<T, E> _else(SjarkIf<E> sjarkIf) {
-//        return of(this, sj -> sj._if(sjarkIf)._else());
-        return null;
+    public IfBuilder<E> _if(
+            Predicate<E> predicate
+    ) {
+        IfBuilder<E> ifBuilder = new IfBuilder<>();
+        ifBuilder.setSjarkIf(new SjarkIf<>(predicate));
+        return ifBuilder;
     }
 
     public PipBuilder<T, E> _while(SjarkIf<E> sjarkIf) {
         return null;
     }
 
-    public PipBuilder<T, E> _return(SjarkIf<E> sjarkIf) {
-//        this.sjark._goto(sjarkIf);
-//        return _else(sjarkIf);
-        return null;
+    public void  _return(Consumer<E> consumer) {
+        with(this, sj -> sj._return(consumer));
     }
 
-    public PipBuilder<T, E> _return(Consumer<E> consumer) {
-        return of(this, sj -> sj._return(consumer));
+    private class IfBuilder<P> {
+        private SjarkIf<P> sjarkIf;
+        private  <R> IfBuilder<P> _then(Function<PipBuilder<P, P>, PipBuilder<P, R>> then) {
+            sjarkIf._then(then.apply(withNullSource()).pipGetter.get());
+            IfBuilder<P> ifBuilder = new IfBuilder<>();
+            ifBuilder.setSjarkIf(sjarkIf);
+            return ifBuilder;
+        }
+
+        private  <R> IfBuilder<P> _else(Function<PipBuilder<P, P>, PipBuilder<P, R>> then) {
+            sjarkIf._else(then.apply(withNullSource()).pipGetter.get());
+            IfBuilder<P> ifBuilder = new IfBuilder<>();
+            ifBuilder.setSjarkIf(sjarkIf);
+            return ifBuilder;
+        }
+
+        private void setSjarkIf(SjarkIf<P> sjarkIf) {
+            this.sjarkIf = sjarkIf;
+        }
     }
 }

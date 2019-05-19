@@ -63,7 +63,7 @@ public class Sjark<E> {
                 ._then(
                         System.out::println
                 )._else(
-                        i -> System.out.println(123123)
+                        System.out::println
                 );
 
         integerSjark.getPip().accept(123123);
