@@ -1,9 +1,7 @@
 package util.option;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class SjarkIf<E> {
 
@@ -13,15 +11,15 @@ public class SjarkIf<E> {
 
     public SjarkIf(Predicate<? super E> predicate) {
         ifElse = predicate;
-        thisSjark = new SjarkPip<>();
-        thatSjark = new SjarkPip<>();
+        thisSjark = new Sjark<>();
+        thatSjark = new Sjark<>();
     }
 
-    public Sjark<E> then() {
+    public Sjark<E> _then() {
         return thatSjark;
     }
 
-    public Sjark<E> orElse() {
+    public Sjark<E> _else() {
         return thatSjark;
     }
 

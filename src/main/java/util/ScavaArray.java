@@ -114,8 +114,8 @@ public class ScavaArray<E> extends ArrayList<E> implements Seq<E> {
         System.out.println(tests.drop(80));
         System.out.println(tests.take(80));
         System.out.println(tests.dropWhile(test -> test.value > 80));
-        System.out.println(tests.<Test>foldLeft(new Test(0), (test1, test2) -> new Test(test1.value + test2.value)));
-        System.out.println(tests.<Test>reduceLeft((test1, test2) -> new Test(test1.value + test2.value)));
+        System.out.println(tests.foldLeft(new Test(0), (test1, test2) -> new Test(test1.value + test2.value)));
+        System.out.println(tests.reduceLeft((test1, test2) -> new Test(test1.value + test2.value)));
     }
 
 }

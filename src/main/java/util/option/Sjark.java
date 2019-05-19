@@ -3,28 +3,59 @@ package util.option;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
-public interface Sjark<E> {
+public class Sjark<E> {
 
-    Consumer<E> getPip();
+    private Consumer<E> pip;
 
-    <R> Sjark<R> map(Function<? super E, ? extends R> mapper);
+    public Consumer<E> getPip() {
+        return pip;
+    }
 
-    Sjark<E> sink(Consumer<E> sink);
+    public Sjark<E> _return(Consumer<E> sink) {
+        pip = sink;
+        return this;
+    }
 
-//    public Sjark(Supplier<E> supplier) {
-//        this.supplier = supplier;
-//    }
-//
-//    private Supplier<E> supplier;
-//
-//    public <R> Sjark<R> thenDo(Function<? super E, ? extends R> mapper) {
-//        Supplier<R> newSupplier = () -> mapper.apply(supplier.get());
-//        return new Sjark<>(newSupplier);
-//    }
-//
-//    public SjarkIf<E> ifThis(Predicate<? super E> predicate) {
-//        return new SjarkIf<>(predicate, supplier);
-//    }
+    public <R> Sjark<R> _do(Function<? super E, ? extends R> mapper) {
+        Sjark<R> nextSjark = new Sjark<>();
+        pip = e -> nextSjark.pip.accept(mapper.apply(e));
+        return nextSjark;
+    }
+
+    public SjarkIf<E> _if(SjarkIf<E> sjarkIf) {
+        pip = e -> sjarkIf.getPip().accept(e);
+        return sjarkIf;
+    }
+
+    public Sjark<E> _index(Sjark<E> sjark) {
+        sjark.pip = e -> pip.accept(e);
+        return sjark;
+    }
+
+    public Sjark<E> _goto(Sjark<E> sjark) {
+        pip = sjark.pip;
+        return this;
+    }
+
+    public Sjark<E> _goto(SjarkIf<E> sjarkIf) {
+        pip = sjarkIf.getPip();
+        return this;
+    }
+
+
+
+    public static void main(String[] args) {
+        Sjark<Integer> integerSjark = new Sjark<>();
+        integerSjark
+                ._do(integer -> integer * 2)
+//                .map(integer -> integer.compareTo(123123))
+                ._do(Object::toString)
+                ._do(String::hashCode)
+                ._do(integer -> integer * 31 + 19)
+                ._do(Object::toString)
+                ._do(String::toUpperCase)
+                ._return(System.out::println);
+        integerSjark.getPip().accept(123123);
+    }
 }
