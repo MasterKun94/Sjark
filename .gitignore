@@ -41,3 +41,6 @@ gen
 .idea/workspace.xml
 src/main/resources/
 src/test/
+src/main/java/test/
+target/classes/META-INF/
+target/generated-sources/
