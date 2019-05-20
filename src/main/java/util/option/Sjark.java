@@ -12,6 +12,10 @@ class Sjark<E> {
         return pip;
     }
 
+    void setPip(Consumer<E> pip) {
+        this.pip = pip;
+    }
+
     Sjark<E> _return(Consumer<E> sink) {
         pip = sink;
         return this;

@@ -1,5 +1,8 @@
 package util.option;
 
+import util.option.Process.End;
+import util.option.Process.If;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -16,6 +19,13 @@ public class PipBuilder<T, E> {
         return builder;
     }
 
+    public static <R, P> PipBuilder<R, P> start(Supplier<Consumer<R>> pipGetter, Sjark<P> sjark) {
+        PipBuilder<R, P> builder = new PipBuilder<>();
+        builder.sjark = sjark;
+        builder.pipGetter = pipGetter;
+        return builder;
+    }
+
     private static <T, R, E> PipBuilder<T, R> with(PipBuilder<T, E> builder, Function<Sjark<E>, Sjark<R>> sjarkMapper) {
         PipBuilder<T, R> newBuilder = new PipBuilder<>();
         newBuilder.pipGetter = builder.pipGetter;
@@ -24,21 +34,25 @@ public class PipBuilder<T, E> {
         return newBuilder;
     }
 
-    public <R> PipBuilder<T, R> _do_____(Function<E, R> mapper) {
+    public <R> PipBuilder<T, R> map(Function<E, R> mapper) {
         return with(this, sj -> sj._do(mapper));
     }
 
-    public Process.If<T, E> _if_____(Predicate<E> predicate) {
+    public If<T, E> _if(Predicate<E> predicate) {
         SjarkIf<E> newIf = this.sjark._if(predicate);
-        return new Process.If<>(newIf, pipGetter);
+        return new If<>(newIf, pipGetter);
     }
 
-    public PipBuilder<T, E> _while_(SjarkIf<E> sjarkIf) {
+    public PipBuilder<T, E> _while(SjarkIf<E> sjarkIf) {
         return null;
     }
 
-    public Process.End<T> _return_(Consumer<E> consumer) {
+    public <R> PipBuilder<T, R> _do(Function<E, R> mapper) {
+        return with(this, sj -> sj._do(mapper));//TODO
+    }
+
+    public End<T> _return(Consumer<E> consumer) {
         PipBuilder<T, E> pipBuilder = with(this, sj -> sj._return(consumer));
-        return new Process.End<>(pipBuilder.pipGetter);
+        return new End<>(pipBuilder.pipGetter);
     }
 }
