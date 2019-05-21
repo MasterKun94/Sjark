@@ -1,7 +1,6 @@
 package util.option;
 
-import util.option.Process.End;
-import util.option.Process.If;
+import util.option.Process.*;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -30,7 +29,6 @@ public class PipBuilder<T, E> {
         PipBuilder<T, R> newBuilder = new PipBuilder<>();
         newBuilder.pipGetter = builder.pipGetter;
         newBuilder.sjark = sjarkMapper.apply(builder.sjark);
-
         return newBuilder;
     }
 
@@ -43,12 +41,12 @@ public class PipBuilder<T, E> {
         return new If<>(newIf, pipGetter);
     }
 
-    public PipBuilder<T, E> _while(SjarkIf<E> sjarkIf) {
+    public While<T, E> _while(SjarkIf<E> sjarkIf) {
         return null;
     }
 
-    public <R> PipBuilder<T, R> _do(Function<E, R> mapper) {
-        return with(this, sj -> sj._do(mapper));//TODO
+    public <R> PipBuilder<T, R> _do(Function<PipBuilder<T, E>, While<T, R>> doWhile) {
+        return null;
     }
 
     public End<T> _return(Consumer<E> consumer) {

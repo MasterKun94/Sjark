@@ -20,6 +20,13 @@ class Process {
             SjarkIf<P> newIf = sjarkIf._then(then.apply(start()).getPip());
             return new Then<>(newIf, pipGetter);
         }
+
+        public PipBuilder<T, P> _do(Function<PipBuilder<P, P>, PipBuilder<P, P>> then) {
+            Sjark<P> newSjark = new Sjark<>();
+            sjarkIf._then(then.apply(start())._return(newSjark.getPip()).getPip());
+            sjarkIf._else(newSjark.getPip());
+            return PipBuilder.start(pipGetter, newSjark);
+        }
     }
 
     public static class Then<T, P> {
@@ -34,16 +41,6 @@ class Process {
             sjarkIf._else(orElse.apply(start()).getPip());
             return new End<>(this.pipGetter);
         }
-
-//        public PipBuilder<T, P> _else() {
-//            Sjark<P> sjark = new Sjark<>();
-//            Consumer<P>
-//            sjark.setPip(sjarkIf.getPip());
-//
-//            PipBuilder<T, P> orElse = new PipBuilder<>();
-//            sjarkIf._else(orElse.);
-//            return null;
-//        }
     }
 
     public static class While<T, P> {
@@ -54,9 +51,10 @@ class Process {
             this.pipGetter = pipGetter;
         }
 
-        public Then<T, P> _do(Function<PipBuilder<P, P>, PipBuilder<P, P>> then) {
-//            return new Then<>(newIf, pipGetter);
-            return null;
+        public PipBuilder<T, P> _do(Function<PipBuilder<P, P>, PipBuilder<P, P>> then) {
+            Function<PipBuilder<P, P>, End<P>> afterWhile = pip -> then.apply(pip)._return(sjarkIf.getPip());
+            sjarkIf._then(afterWhile.apply(start()).getPip());
+            return PipBuilder.start(pipGetter, sjarkIf.getThatSjark());
         }
     }
 
