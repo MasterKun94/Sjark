@@ -1,12 +1,10 @@
 package util.option;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import util.option.Process.*;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 public class Piper<T, E> {
     private Sjark<T> headSjark;
