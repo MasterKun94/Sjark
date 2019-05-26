@@ -1,10 +1,14 @@
 package util.option;
 
+import util.option.sjark.Sjark;
+import util.option.sjark.SjarkIf;
+
+import java.util.Collection;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static util.option.Piper.start;
+import static util.option.PipBuilder.start;
 
 class Process {
 
@@ -25,7 +29,7 @@ class Process {
             Sjark<P> newSjark = new Sjark<>();
             sjarkIf._then(then.apply(start())._return(newSjark.getPip()).getPip());
             sjarkIf._else(newSjark.getPip());
-            return Piper.start(headSjark, newSjark);
+            return PipBuilder.start(headSjark, newSjark);
         }
     }
 
@@ -54,7 +58,7 @@ class Process {
         public Piper<T, P> _do(Function<Piper<P, P>, Piper<P, P>> then) {
             Function<Piper<P, P>, End<P>> afterWhile = pip -> then.apply(pip)._return(sjarkIf.getPip());
             sjarkIf._then(afterWhile.apply(start()).getPip());
-            return Piper.start(headSjark, sjarkIf.getThatSjark());
+            return PipBuilder.start(headSjark, sjarkIf.getThatSjark());
         }
     }
 
@@ -66,6 +70,22 @@ class Process {
 
         public Consumer<T> getPip() {
             return headSjark.getPip();
+        }
+
+        public void run(T source) {
+            headSjark.getPip().accept(source);
+        }
+
+        public void run(Collection<T> sources) {
+            sources.forEach(getPip());
+        }
+
+        public void runAsync(T source, ExecutorService service) {
+            service.submit(() -> run(source));
+        }
+
+        public void runAsync(Collection<T> sources, ExecutorService service) {
+            sources.forEach(t -> runAsync(t, service));
         }
     }
 }

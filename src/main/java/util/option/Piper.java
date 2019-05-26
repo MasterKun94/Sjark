@@ -1,69 +1,37 @@
 package util.option;
 
-import util.option.Process.*;
+import util.option.sjark.Sjark;
 
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.Collection;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.function.*;
 
-public class Piper<T, E> {
-    private Sjark<T> headSjark;
-    private Sjark<E> tailSjark;
+public interface Piper<T, E> {
+    Sjark<T> getHeadSjark();
 
-    public static <R> Piper<R, R> start() {
-        Piper<R, R> piper = new Piper<>();
-        piper.tailSjark = new Sjark<>();
-        piper.headSjark = piper.tailSjark;
-        return piper;
-    }
+    Sjark<E> getTailSjark();
 
-    public static <R, P> Piper<R, P> start(Sjark<R> headSjark, Sjark<P> tailSjark) {
-        Piper<R, P> piper = new Piper<>();
-        piper.tailSjark = tailSjark;
-        piper.headSjark = headSjark;
-        return piper;
-    }
+    <R> Piper<T, R> map(Function<? super E, ? extends R> mapper);
 
-    private static <T, R, E> Piper<T, R> with(Piper<T, E> builder, Function<Sjark<E>, Sjark<R>> sjarkMapper) {
-        Piper<T, R> newPiper = new Piper<>();
-        newPiper.headSjark = builder.headSjark;
-        newPiper.tailSjark = sjarkMapper.apply(builder.tailSjark);
-        return newPiper;
-    }
+    <R> Piper<T, R> flatMap(Function<? super E, ? extends Collection<? extends R>> flatMapper);
 
-    public <R> Piper<T, R> map(Function<E, R> mapper) {
-        return with(this, sj -> sj._do(mapper));
-    }
+    <R> Piper<T, R> ref(Piper<E, R> quotePip);
 
-    public <R> Piper<T, R> ref(Piper<E, R> quotePip) {//TODO
-        this.tailSjark._goto(quotePip.headSjark);
-        return start(this.headSjark, quotePip.tailSjark);
-    }
+    <R, P> Piper<T, P> apply(Supplier<? extends R> supplier, BiFunction<? super E, ? super R, ? extends P> biFunction);
 
-    public Piper<T, E> annotate(Consumer<E> annotate) {
-        return with(this, sjark -> sjark._declare(annotate));
-    }
+    <R, P> Piper<T, P> applyAsync(Supplier<? extends R> supplier, BiFunction<? super E, ? super R, ? extends P> biFunction, Executor executor);
 
-    public If<T, E> _if(Predicate<E> predicate) {
-        SjarkIf<E> newIf = this.tailSjark._if(predicate);
-        return new If<>(newIf, headSjark);
-    }
+    Piper<T, E> annotate(Consumer<? super E> annotate);
 
-    public While<T, E> _while(Predicate<E> predicate) {
-        SjarkIf<E> newIf = this.tailSjark._if(predicate);
-        return new While<>(newIf, headSjark);
-    }
+    Process.If<T, E> _if(Predicate<? super E> predicate);
 
-    public Piper<T, E> _index() {
-        return null;
-    }
+    Process.While<T, E> _while(Predicate<? super E> predicate);
 
-    public <R> Piper<T, R> _goto() {
-        return null;
-    }
+    Piper<T, E> _index();
 
-    public End<T> _return(Consumer<E> consumer) {
-        Piper<T, E> piper = with(this, sj -> sj._return(consumer));
-        return new End<>(piper.headSjark);
-    }
+    <R> Piper<T, R> _goto();
+
+    Process.End<T> _return(Consumer<E> consumer);
+
 }
