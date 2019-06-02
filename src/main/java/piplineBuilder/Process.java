@@ -1,16 +1,16 @@
-package util.option;
+package piplineBuilder;
 
-import util.option.sjark.Sjark;
-import util.option.sjark.SjarkIf;
+import piplineBuilder.sjark.Sjark;
+import piplineBuilder.sjark.SjarkIf;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static util.option.PipBuilder.start;
+import static piplineBuilder.PipBuilder.start;
 
-class Process {
+public class Process {
 
     public static class If<T, P> {
         private SjarkIf<P> sjarkIf;

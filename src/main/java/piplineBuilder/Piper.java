@@ -1,10 +1,9 @@
-package util.option;
+package piplineBuilder;
 
-import util.option.sjark.Sjark;
+import piplineBuilder.sjark.Sjark;
 
 import java.util.Collection;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.function.*;
 
 public interface Piper<T, E> {

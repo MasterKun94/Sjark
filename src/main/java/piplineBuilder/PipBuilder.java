@@ -1,8 +1,8 @@
-package util.option;
+package piplineBuilder;
 
-import util.option.Process.*;
-import util.option.sjark.Sjark;
-import util.option.sjark.SjarkIf;
+import piplineBuilder.sjark.IteratorSupplier;
+import piplineBuilder.sjark.Sjark;
+import piplineBuilder.sjark.SjarkIf;
 
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -78,15 +78,15 @@ public class PipBuilder<T, E> implements Piper<T, E> {
     }
 
     @Override
-    public If<T, E> _if(Predicate<? super E> predicate) {
+    public Process.If<T, E> _if(Predicate<? super E> predicate) {
         SjarkIf<E> newIf = this.tailSjark._if(predicate);
-        return new If<>(newIf, headSjark);
+        return new Process.If<>(newIf, headSjark);
     }
 
     @Override
-    public While<T, E> _while(Predicate<? super E> predicate) {
+    public Process.While<T, E> _while(Predicate<? super E> predicate) {
         SjarkIf<E> newIf = this.tailSjark._if(predicate);
-        return new While<>(newIf, headSjark);
+        return new Process.While<>(newIf, headSjark);
     }
 
     @Override
@@ -100,8 +100,8 @@ public class PipBuilder<T, E> implements Piper<T, E> {
     }
 
     @Override
-    public End<T> _return(Consumer<E> consumer) {
+    public Process.End<T> _return(Consumer<E> consumer) {
         Piper<T, E> piper = with(this, sjark -> sjark._return(consumer));
-        return new End<>(piper.getHeadSjark());
+        return new Process.End<>(piper.getHeadSjark());
     }
 }

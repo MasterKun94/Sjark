@@ -1,7 +1,8 @@
-package util.Tools;
+package Tools;
 
 import com.github.dozermapper.core.DozerBeanMapperBuilder;
 import com.github.dozermapper.core.Mapper;
+import com.github.dozermapper.core.MappingException;
 
 import java.io.*;
 
@@ -29,8 +30,8 @@ public class Copy  {
         try {
             Mapper mapper = DozerBeanMapperBuilder.buildDefault();
             return (T) mapper.map(object, object.getClass());
-        } catch (Exception e) {
-            throw new RuntimeException("object 需要有无参构造函数");
+        } catch (MappingException e) {
+            throw new RuntimeException("object 需要有无参构造函数", e);
         }
 
     }

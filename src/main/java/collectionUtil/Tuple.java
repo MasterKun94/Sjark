@@ -1,4 +1,4 @@
-package util.Tools;
+package collectionUtil;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ public class Tuple<E, R> {
     public E _1;
     public R _2;
 
-    public static <E, R> Tuple of(E first, R second) {
+    public static <E, R> Tuple<E, R> of(E first, R second) {
         return new Tuple<>(first, second);
     }
 
@@ -31,5 +31,9 @@ public class Tuple<E, R> {
     @Override
     public int hashCode() {
         return _1.hashCode() * 37 + _2.hashCode() * 59 + 23;
+    }
+
+    public int firstHash() {
+        return _1.hashCode() * 37 + 41;
     }
 }
