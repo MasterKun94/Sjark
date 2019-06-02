@@ -5,14 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class FutureUtil<T> {
-    List<CompletableFuture<T>> futureList;
+    ConcurrentHashMap<CompletableFuture<T>, Integer> futureList;
     BlockingQueue<T> queue = new LinkedBlockingQueue<>();
 
     public void add(CompletableFuture<T> future) {
-        future.thenAccept(queue::add);
+        futureList.put(future, 1);
+        future.thenAccept(e -> {
+            queue.add(e);
+            futureList.remove(future);
+        });
     }
 
     public void addAll(List<CompletableFuture<T>> futures) {
@@ -24,12 +29,7 @@ public class FutureUtil<T> {
     }
 
     public boolean isAllDone() {
-        for (CompletableFuture<T> future : futureList) {
-            if (!future.isDone()) {
-                return false;
-            }
-        }
-        return true;
+        return futureList.isEmpty();
     }
 
     public static void main(String[] args) {
