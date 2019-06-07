@@ -1,18 +1,12 @@
 package httpClientBuilder;
 
-import com.alibaba.fastjson.JSON;
 import httpClientBuilder.connector.HttpConnector;
 import org.apache.commons.codec.Charsets;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -52,7 +46,7 @@ public class HttpBuilder {
     }
 
     public HttpBuilder params(Map<String, String> params) {
-        if (MapUtils.isEmpty(params)) {
+        if (params == null || params.isEmpty()) {
             return this;
         }
         StringBuilder builder = new StringBuilder();
@@ -69,7 +63,7 @@ public class HttpBuilder {
     }
 
     public HttpBuilder headers(Map<String, String> headers) {
-        if (MapUtils.isEmpty(headers)) {
+        if (headers == null || headers.isEmpty()) {
             return this;
         }
         Set<String> keys = headers.keySet();
@@ -88,8 +82,7 @@ public class HttpBuilder {
         return this;
     }
 
-    public HttpBuilder entity(Object object) {
-        String entity = object instanceof String ? (String) object : JSON.toJSONString(object);
+    public HttpBuilder entity(String entity) {
         if (request instanceof HttpPost) {
             ((HttpPost) request).setEntity(new StringEntity(entity, Charsets.UTF_8));
         } else if (request instanceof HttpPut) {
@@ -102,6 +95,7 @@ public class HttpBuilder {
 
     public HttpBuilder charset(Charset charset) {
         this.charset = charset;
+        request.setHeader("Charset", charset.toString());
         return this;
     }
 
@@ -125,13 +119,4 @@ public class HttpBuilder {
             return supplier.get();
         }
     }
-
-    private String getStringEntity(InputStream stream) {
-        try {
-            return IOUtils.toString(stream, charset == null ? Charset.defaultCharset() : charset);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

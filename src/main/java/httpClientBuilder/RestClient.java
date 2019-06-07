@@ -23,7 +23,7 @@ public class RestClient {
             String url,
             Map<String, String> params,
             Map<String, String> headers,
-            Object entity,
+            String entity,
             Charset charset,
             Class<T> clazz,
             HttpConnector<T> connector) {
@@ -35,7 +35,7 @@ public class RestClient {
             String url,
             Map<String, String> params,
             Map<String, String> headers,
-            Object entity,
+            String entity,
             Charset charset,
             Class<T> clazz,
             HttpConnector<T> connector) {
@@ -57,7 +57,7 @@ public class RestClient {
     private static <T> Function<HttpBuilder, T> connect(
             Map<String, String> params,
             Map<String, String> headers,
-            Object entity,
+            String entity,
             Charset charset,
             Class<T> clazz,
             HttpConnector<T> connector)
