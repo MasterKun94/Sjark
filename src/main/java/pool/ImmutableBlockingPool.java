@@ -1,6 +1,9 @@
 package pool;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.Supplier;
 
 public class ImmutableBlockingPool<T> extends ImmutablePool<T> {
     private BlockingQueue<Runnable> blockingQueue;
@@ -12,6 +15,14 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> {
 
     @Override
     public T take() {
+        T t = borrow();
+        Thread[] th = new Thread[1];
+        CompletableFuture<T> future = CompletableFuture.supplyAsync(() -> {
+            th[0] = Thread.currentThread();
+            LockSupport.park();
+            return null;
+
+        });
         return null;
     }
 
@@ -19,4 +30,6 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> {
     public int release(T t) {
         return 0;
     }
+
+
 }
