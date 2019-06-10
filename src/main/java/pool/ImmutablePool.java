@@ -2,10 +2,11 @@ package pool;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-public class ObjectPool<T> implements Pool<T> {
+public class ImmutablePool<T> implements Pool<T> {
     private static final int ELE_SIZE = 8;
     private static final int LOOP = 5;
 
@@ -16,7 +17,7 @@ public class ObjectPool<T> implements Pool<T> {
     private Node root;
 
     @SuppressWarnings("unchecked")
-    public ObjectPool(int capacity, Class<T> clazz) {
+    public ImmutablePool(int capacity, Class<T> clazz) {
         elements = (T[]) new Object[capacity];
         referenceCounter = new AtomicIntegerArray(capacity);
         hashIndexMap = new HashMap<>(capacity);
@@ -40,10 +41,8 @@ public class ObjectPool<T> implements Pool<T> {
         for (int i = 0; i < capacity; i = i + ELE_SIZE) {
             start = i;
             end = capacity < i + ELE_SIZE ? capacity - 1 : i + ELE_SIZE - 1;
-            node = new Node();
-            node.setStart(start);
-            node.setEnd(end);
-            node.setAvailableAmount(new AtomicInteger(end - start + 1));
+            node = new Node(start, end, null, null);
+            node.setAvailableAmount(end - start + 1);
             nodeStack.push(node);
             intStack.push(1);
             refresh(nodeStack, intStack);
@@ -53,8 +52,14 @@ public class ObjectPool<T> implements Pool<T> {
         root.passDownLayer(0);
     }
 
+    @Override
     public T borrow() {
-        if (root.getAvailableAmount().get() == 0) {
+        return root.getAvailableAmount() == 0 ? null : getAvailable(root);
+    }
+
+    @Override
+    public T take() {
+        if (root.getAvailableAmount() == 0) {
             throw new IllegalStateException("Pool full");
         } else {
             T t = getAvailable(root);
@@ -66,18 +71,22 @@ public class ObjectPool<T> implements Pool<T> {
         }
     }
 
+    @Override
     public int addReference(T t) {
         return referenceCounter.incrementAndGet(getIndex(t));
     }
 
+    @Override
     public int release(T t) {
-        return referenceCounter.decrementAndGet(getIndex(t));
+        return referenceCounter.decrementAndGet(getIndex(t));//TODO
     }
 
+    @Override
     public int getCounter(T t) {
         return referenceCounter.get(getIndex(t));
     }
 
+    @Override
     public int getIndex(T t) {
         Integer integer = hashIndexMap.get(t);
         if (integer == null || referenceCounter.get(integer) == 0) {
@@ -88,7 +97,7 @@ public class ObjectPool<T> implements Pool<T> {
 
     @Override
     public int availableAmount() {
-        return root.getAvailableAmount().get();
+        return root.getAvailableAmount();
     }
 
     @Override
@@ -97,18 +106,17 @@ public class ObjectPool<T> implements Pool<T> {
     }
 
     private T getAvailable(Node node) {
-        AtomicInteger atomic = node.getAvailableAmount();
-        int key = atomic.decrementAndGet();
+        int key = node.decrementAndGetAmount();
         Node child;
         if (key >= 0) {
             for (int i = 0; i < LOOP; i++) {
                 Node left = node.getLeft();
                 Node right = node.getRight();
                 child = (key + i) % 2 == 0 ?
-                        left.getAvailableAmount().get() > 0 ?
+                        left.getAvailableAmount() > 0 ?
                                 left :
                                 right :
-                        right.getAvailableAmount().get() > 0 ?
+                        right.getAvailableAmount() > 0 ?
                                 right :
                                 left;
 
@@ -116,20 +124,20 @@ public class ObjectPool<T> implements Pool<T> {
                     if (child.getLeft() != null) {
                         return getAvailable(child);
                     }
-                    if (child.getAvailableAmount().decrementAndGet() >= 0) {
+                    if (child.decrementAndGetAmount() >= 0) {
                         T t = getAvailableElement(child);
                         if (t != null) {
                             return t;
                         }
                     } else {
-                        child.getAvailableAmount().incrementAndGet();
+                        child.incrementAndGetAmount();
                     }
 
                 }
 
             }
         }
-        atomic.incrementAndGet();
+        node.incrementAndGetAmount();
         return null;
     }
 
@@ -152,13 +160,9 @@ public class ObjectPool<T> implements Pool<T> {
                 Node rightNode = nodeStack.pop();
                 Node leftNode = nodeStack.pop();
 
-                Node parentNode = new Node();
-                parentNode.setStart(leftNode.getStart());
-                parentNode.setEnd(rightNode.getEnd());
-                parentNode.setLeft(leftNode);
-                parentNode.setRight(rightNode);
-                parentNode.setAvailableAmount(new AtomicInteger(leftNode.getAvailableAmount().get() + rightNode.getAvailableAmount().get()));
-                intStack.push(integer * 2);
+                Node parentNode = new Node(leftNode.getStart(), rightNode.getEnd(), leftNode, rightNode);
+                parentNode.setAvailableAmount(leftNode.getAvailableAmount() + rightNode.getAvailableAmount());
+                intStack.push(integer << 1);
                 nodeStack.push(parentNode);
                 refresh(nodeStack, intStack);
             }
@@ -175,6 +179,6 @@ public class ObjectPool<T> implements Pool<T> {
     }
 
     public static void main(String[] args) {
-
+        Random random = new Random();
     }
 }

@@ -3,28 +3,28 @@ package pool;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {
-    private int start;
-    private int end;
+    private final int start;
+    private final int end;
+    private final Node left;
+    private final Node right;
+
     private int layer;
     private AtomicInteger availableAmount;
 
-    private Node left;
-    private Node right;
+
+    public Node(int start, int end, Node left, Node right) {
+        this.start = start;
+        this.end = end;
+        this.left = left;
+        this.right = right;
+    }
 
     public Node getLeft() {
         return left;
     }
 
-    public void setLeft(Node left) {
-        this.left = left;
-    }
-
     public Node getRight() {
         return right;
-    }
-
-    public void setRight(Node right) {
-        this.right = right;
     }
 
     public int getStart() {
@@ -35,20 +35,20 @@ public class Node {
         return end;
     }
 
-    public void setStart(int start) {
-        this.start = start;
+    public int getAvailableAmount() {
+        return availableAmount.get();
     }
 
-    public void setEnd(int end) {
-        this.end = end;
+    public void setAvailableAmount(int availableAmount) {
+        this.availableAmount = new AtomicInteger(availableAmount);
     }
 
-    public AtomicInteger getAvailableAmount() {
-        return availableAmount;
+    public int incrementAndGetAmount() {
+        return availableAmount.incrementAndGet();
     }
 
-    public void setAvailableAmount(AtomicInteger availableAmount) {
-        this.availableAmount = availableAmount;
+    public int decrementAndGetAmount() {
+        return availableAmount.decrementAndGet();
     }
 
     public void passDownLayer(int layer) {
@@ -76,8 +76,8 @@ public class Node {
                 ", \n" + tab + "\t\"end\" : " + this.getEnd() +
                 ", \n" + tab + "\t\"layer\" : " + this.getLayer() +
                 ", \n" + tab + "\t\"availableAmount\" : " + this.getAvailableAmount() +
-                ", \n" + tab + "\t\"left\" : " + this.getLeft() + ", \n" +
-                tab + "\t\"right\" : " + this.getRight() + "\n" +
-                tab + "}";
+                ", \n" + tab + "\t\"left\" : " + this.getLeft() +
+                ", \n" + tab + "\t\"right\" : " + this.getRight() +
+                "\n" + tab + "}";
     }
 }
