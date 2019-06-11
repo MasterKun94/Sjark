@@ -9,14 +9,14 @@ public class Node {
     private final Node right;
 
     private int layer;
-    private AtomicInteger availableAmount;
-
+    private final AtomicInteger availableAmount;
 
     public Node(int start, int end, Node left, Node right) {
         this.start = start;
         this.end = end;
         this.left = left;
         this.right = right;
+        this.availableAmount = new AtomicInteger();
     }
 
     public Node getLeft() {
@@ -40,7 +40,7 @@ public class Node {
     }
 
     public void setAvailableAmount(int availableAmount) {
-        this.availableAmount = new AtomicInteger(availableAmount);
+        this.availableAmount.set(availableAmount);
     }
 
     public int incrementAndGetAmount() {

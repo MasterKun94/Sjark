@@ -1,14 +1,12 @@
 package pool;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.LockSupport;
-import java.util.function.Supplier;
 
-public class ImmutableBlockingPool<T> extends ImmutablePool<T> {
-    private BlockingQueue<Runnable> blockingQueue;
+public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements BlockingPool<T> {
+    private BlockingQueue<Box> blockingQueue;
 
-    public ImmutableBlockingPool(int capacity, Class<T> clazz, BlockingQueue<Runnable> blockingQueue) {
+    public ImmutableBlockingPool(int capacity, Class<T> clazz, BlockingQueue<Box> blockingQueue) {
         super(capacity, clazz);
         this.blockingQueue = blockingQueue;
     }
@@ -16,20 +14,29 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> {
     @Override
     public T take() {
         T t = borrow();
-        Thread[] th = new Thread[1];
-        CompletableFuture<T> future = CompletableFuture.supplyAsync(() -> {
-            th[0] = Thread.currentThread();
-            LockSupport.park();
-            return null;
-
-        });
-        return null;
+        Box box = new Box();
+        box.setThread(Thread.currentThread());
+        blockingQueue.add(box);
+        LockSupport.park();
+        return getElement(box.getPointer());
     }
 
     @Override
     public int release(T t) {
-        return 0;
+        int index = getPointer(t);
+        if (getCounter(index) == 1) {
+            Box box = blockingQueue.poll();
+            if (box != null) {
+                box.setPointer(index);
+                LockSupport.unpark(box.getThread());
+                return 0;
+            }
+        }
+        return super.release(index);
     }
 
-
+    @Override
+    public int getQueueRemaining() {
+        return blockingQueue.remainingCapacity();
+    }
 }
