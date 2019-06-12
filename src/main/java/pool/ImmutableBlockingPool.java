@@ -3,7 +3,7 @@ package pool;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.LockSupport;
 
-public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements BlockingPool<T> {
+public class ImmutableBlockingPool<T> extends ImmutablePool<T> {
     private BlockingQueue<Box> blockingQueue;
 
     public ImmutableBlockingPool(int capacity, Class<T> clazz, BlockingQueue<Box> blockingQueue) {
@@ -33,10 +33,5 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements Blocki
             }
         }
         return super.release(index);
-    }
-
-    @Override
-    public int getQueueRemaining() {
-        return blockingQueue.remainingCapacity();
     }
 }

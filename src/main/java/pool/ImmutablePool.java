@@ -1,7 +1,7 @@
 package pool;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class ImmutablePool<T> implements Pool<T> {
@@ -10,7 +10,7 @@ public class ImmutablePool<T> implements Pool<T> {
 
     private final T[] elements;
     private final AtomicIntegerArray referenceCounter;
-    private final HashMap<T, Integer> hashIndexMap;
+    private final PointerIndexer indexer;
 
     private final Node root;
 
@@ -18,7 +18,7 @@ public class ImmutablePool<T> implements Pool<T> {
     public ImmutablePool(int capacity, Class<T> clazz) {
         elements = (T[]) new Object[capacity];
         referenceCounter = new AtomicIntegerArray(capacity);
-        hashIndexMap = new HashMap<>(capacity);
+        HashMap<T, Integer> hashIndexMap = new HashMap<>(capacity);
         try {
             for (int i = 0; i < capacity; i++) {
                 T t = clazz.getConstructor().newInstance();
@@ -28,7 +28,7 @@ public class ImmutablePool<T> implements Pool<T> {
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException  e) {
             e.printStackTrace();
         }
-
+        indexer = new PointerIndexer(hashIndexMap);
         Stack<Integer> intStack = new Stack<>();
         Stack<Node> nodeStack = new Stack<>();
 
@@ -109,11 +109,7 @@ public class ImmutablePool<T> implements Pool<T> {
 
     @Override
     public int getPointer(T t) {
-        Integer integer = hashIndexMap.get(t);
-        if (integer == null) {
-            throw new IllegalArgumentException();
-        }
-        return integer;
+        return indexer.findPointer(t);
     }
 
     @Override
@@ -209,6 +205,68 @@ public class ImmutablePool<T> implements Pool<T> {
             releaseReference(left.getEnd() >= pointer ? left : right, pointer);
         }
         node.incrementAndGetAmount();
+    }
 
+    private class PointerIndexer {
+        private int[] hashcodeArray;
+        private int[] pointerArray;
+
+        private PointerIndexer(Map<T, Integer> map) {
+            List<T> list = new ArrayList<>(map.keySet());
+            list.sort(Comparator.comparingInt(Object::hashCode));
+            int listSize = list.size();
+            hashcodeArray = new int[listSize];
+            pointerArray = new int[listSize];
+            T o;
+            for (int i = 0; i < listSize; i++) {
+                o = list.get(i);
+                hashcodeArray[i] = o.hashCode();
+                pointerArray[i] = map.get(o);
+            }
+        }
+
+        private int findPointer(T object) {
+            System.out.println("test");
+            int reqHash = object.hashCode();
+            int capacity = pointerArray.length;
+            int minIdx = 0;
+            int maxIdx = capacity - 1;
+            int minHash, maxHash, get, idx;
+            minHash = hashcodeArray[minIdx];
+            maxHash = hashcodeArray[maxIdx];
+            do {
+                idx = (maxIdx - minIdx) * (reqHash - minHash) / (maxHash - minHash) + minIdx;
+//                System.out.println(idx);
+                get = hashcodeArray[idx];
+//                System.out.println(get + " " + reqHash + " : " + minIdx + " " + maxIdx);
+                if (reqHash > get) {
+                    minIdx = idx + 1;
+                    minHash = hashcodeArray[minIdx];
+                } else if (reqHash < get) {
+                    maxIdx = idx - 1;
+                    maxHash = hashcodeArray[maxIdx];
+                }
+            } while (reqHash != get || maxIdx != minIdx);
+                System.out.println(idx);
+
+            if (object.equals(getElement(get))) {
+                return idx;
+            }
+            int idx2 = idx + 1;
+            while (reqHash == hashcodeArray[idx2]) {
+                if (object.equals(getElement(get))) {
+                    return idx2;
+                }
+                idx2++;
+            }
+            idx2 = idx - 1;
+            while (reqHash == hashcodeArray[idx2]) {
+                if (object.equals(getElement(get))) {
+                    return idx2;
+                }
+                idx2--;
+            }
+            throw new IllegalArgumentException();
+        }
     }
 }
