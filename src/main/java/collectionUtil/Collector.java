@@ -1,5 +1,6 @@
 package collectionUtil;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -7,27 +8,19 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface Collector<E> {
-     List<E> getList();
+     Collection<E> get();
 
-     <R> List<R> map(Function<? super E, ? extends R> mapper);
+     <R> Collector<R> map(Function<? super E, ? extends R> mapper);
 
-     <K, V> TupleCollector<K, V> mapToTuple(Function<? super E, Tuple<K, V>> mapper);
+     <K, V> TupleCollector<K, V> mapToTuple(
+             Function<? super E, ? extends K> keyMapper,
+             Function<? super E, ? extends V> valueMapper);
 
-     <R> List<R> flatMap(Function<? super E, ? extends List<? extends R>> flatMapper);
+     <R> Collector<R> flatMap(Function<? super E, ? extends Collection<? extends R>> flatMapper);
 
-     <K, V> TupleCollectorForArray<K, V> flatMapToTuple(Function<? super E, ? extends List<Tuple<K, V>>> flatMapper);
+     Collector<E> filter(Predicate<? super E> predicate);
 
-     List<E> filter(Predicate<? super E> predicate);
-
-     List<E> filterNot(Predicate<? super E> predicate);
-
-     List<E> takeWhile(Predicate<? super E> predicate);
-
-     List<E> dropWhile(Predicate<? super E> predicate);
-
-     List<E> take(int n);
-
-     List<E> drop(int n);
+     Collector<E> filterNot(Predicate<? super E> predicate);
 
      boolean forAll(Predicate<? super E> predicate);
 
@@ -35,11 +28,20 @@ public interface Collector<E> {
 
      int count(Predicate<? super E> predicate);
 
-     E fold(E e, BinaryOperator<E> operator);
+     E fold(E init, BinaryOperator<E> operator);
 
-     <R> R reduce(R r, BiFunction<R, ? super E, R> biFunction);
+     <R> R reduce(R init, BiFunction<? super R, ? super E, ? extends R> accumulator);
 
-     static <E> Collector<E> of(List<E> list) {
-          return new CollectorForArray<>(list);
+     <K> Collector<E> foldBy(Function<? super E, ? extends K> key, BinaryOperator<E> accumulator);
+
+     <K, R> Collector<R> reduceBy(
+             Function<? super E, ? extends K> keyGetter,
+             Function<? super E, ? extends R> mapper,
+             BiFunction<? super R, ? super E, ? extends R> accumulator);
+
+     <K> Collector<List<E>> groupBy(Function<? super E, ? extends K> key);
+
+     static <E> Collector<E> of(Collection<E> list) {
+          return new ListCollector<>(list);
      }
 }

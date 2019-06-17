@@ -23,5 +23,7 @@ public interface Pool<T> {
 
     int availableAmount();
 
+    boolean isFull();
+
     int size();
 }

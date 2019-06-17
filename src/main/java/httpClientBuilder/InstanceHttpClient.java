@@ -1,4 +1,4 @@
-package httpClientBuilder.connector;
+package httpClientBuilder;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -6,7 +6,7 @@ import org.apache.http.impl.client.HttpClients;
 public class InstanceHttpClient {
     private static volatile CloseableHttpClient httpClient;
 
-    public static CloseableHttpClient getInstance() {
+    public static CloseableHttpClient getDefault() {
         if (httpClient == null) {
             synchronized (InstanceHttpClient.class) {
                 if (httpClient == null) {

@@ -1,9 +1,11 @@
 package httpClientBuilder;
 
-import httpClientBuilder.connector.HttpConnector;
 import org.apache.commons.codec.Charsets;
+import org.apache.http.HttpHost;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.protocol.HttpContext;
 
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -17,9 +19,11 @@ public class HttpBuilder {
     private static final String EQ = "=";
     private static final String AND = "&";
 
-    private Charset charset;
     private HttpRequestBase request;
     private String URL;
+    private HttpHost httpHost;
+    private HttpContext httpContext;
+    private CloseableHttpClient httpClient;
 
     private static HttpBuilder start(HttpRequestBase request, String url) {
 
@@ -94,14 +98,29 @@ public class HttpBuilder {
     }
 
     public HttpBuilder charset(Charset charset) {
-        this.charset = charset;
         request.setHeader("Charset", charset.toString());
+        return this;
+    }
+
+    public HttpBuilder setHttpHost(HttpHost httpHost) {
+        this.httpHost = httpHost;
+        return this;
+    }
+
+    public HttpBuilder setHttpContext(HttpContext httpContext) {
+        this.httpContext = httpContext;
+        return this;
+    }
+
+    public HttpBuilder setHttpClient(CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
         return this;
     }
 
     public <T> HttpResponseBuilder<T> execute(HttpConnector<T> connector) {
         request.setURI(URI.create(URL));
-        return new HttpResponseBuilder<>(() -> connector.execute(request));
+
+        return new HttpResponseBuilder<>(() -> HttpConnector.execute(connector, request));
     }
 
     public class HttpResponseBuilder<T> {

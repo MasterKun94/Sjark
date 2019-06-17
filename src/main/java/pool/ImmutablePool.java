@@ -4,9 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
-public class ImmutablePool<T> implements Pool<T> {
+public  class ImmutablePool<T> implements Pool<T> {
     private static final int ELE_SIZE = 8;
-    private static final int LOOP = 5;
 
     private final T[] elements;
     private final AtomicIntegerArray referenceCounter;
@@ -18,17 +17,17 @@ public class ImmutablePool<T> implements Pool<T> {
     public ImmutablePool(int capacity, Class<T> clazz) {
         elements = (T[]) new Object[capacity];
         referenceCounter = new AtomicIntegerArray(capacity);
-        HashMap<T, Integer> hashIndexMap = new HashMap<>(capacity);
+        Map<T, Integer> map = new TreeMap<>(Comparator.comparingInt(Object::hashCode));
         try {
             for (int i = 0; i < capacity; i++) {
                 T t = clazz.getConstructor().newInstance();
                 elements[i] = t;
-                hashIndexMap.put(t, i);
+                map.put(t, i);
             }
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException  e) {
             e.printStackTrace();
         }
-        indexer = new PointerIndexer(hashIndexMap);
+        indexer = new PointerIndexer(map);
         Stack<Integer> intStack = new Stack<>();
         Stack<Node> nodeStack = new Stack<>();
 
@@ -46,7 +45,6 @@ public class ImmutablePool<T> implements Pool<T> {
         }
         reduce(nodeStack, intStack);
         root = nodeStack.pop();
-        root.passDownLayer(0);
     }
 
     @Override
@@ -123,6 +121,11 @@ public class ImmutablePool<T> implements Pool<T> {
     }
 
     @Override
+    public boolean isFull() {
+        return root.getAvailableAmount() == 0;
+    }
+
+    @Override
     public int size() {
         return root.getEnd() - root.getStart() + 1;
     }
@@ -131,7 +134,7 @@ public class ImmutablePool<T> implements Pool<T> {
         int key = node.decrementAndGetAmount();
         Node child;
         if (key >= 0) {
-            for (int i = 0; i < LOOP; i++) {
+            for (int i = 0; i < 5; i++) {
                 Node left = node.getLeft();
                 Node right = node.getRight();
                 child = (key + i) % 2 == 0 ?
@@ -201,6 +204,7 @@ public class ImmutablePool<T> implements Pool<T> {
     private void releaseReference(Node node, int pointer) {
         Node left = node.getLeft();
         Node right = node.getRight();
+
         if (left != null) {
             releaseReference(left.getEnd() >= pointer ? left : right, pointer);
         }
@@ -208,8 +212,8 @@ public class ImmutablePool<T> implements Pool<T> {
     }
 
     private class PointerIndexer {
-        private int[] hashcodeArray;
-        private int[] pointerArray;
+        private final int[] hashcodeArray;
+        private final int[] pointerArray;
 
         private PointerIndexer(Map<T, Integer> map) {
             List<T> list = new ArrayList<>(map.keySet());
@@ -224,21 +228,18 @@ public class ImmutablePool<T> implements Pool<T> {
                 pointerArray[i] = map.get(o);
             }
         }
-
         private int findPointer(T object) {
-            System.out.println("test");
+
             int reqHash = object.hashCode();
-            int capacity = pointerArray.length;
             int minIdx = 0;
-            int maxIdx = capacity - 1;
-            int minHash, maxHash, get, idx;
-            minHash = hashcodeArray[minIdx];
-            maxHash = hashcodeArray[maxIdx];
+            int maxIdx = pointerArray.length - 1;
+            int get;
+            int idx;
+            int minHash = hashcodeArray[minIdx];
+            int maxHash = hashcodeArray[maxIdx];
             do {
-                idx = (maxIdx - minIdx) * (reqHash - minHash) / (maxHash - minHash) + minIdx;
-//                System.out.println(idx);
+                idx = ((reqHash - minHash)) / ((maxHash - minHash) / (maxIdx - minIdx)) + minIdx;
                 get = hashcodeArray[idx];
-//                System.out.println(get + " " + reqHash + " : " + minIdx + " " + maxIdx);
                 if (reqHash > get) {
                     minIdx = idx + 1;
                     minHash = hashcodeArray[minIdx];
@@ -246,22 +247,21 @@ public class ImmutablePool<T> implements Pool<T> {
                     maxIdx = idx - 1;
                     maxHash = hashcodeArray[maxIdx];
                 }
-            } while (reqHash != get || maxIdx != minIdx);
-                System.out.println(idx);
+            } while (reqHash != get);
 
-            if (object.equals(getElement(get))) {
-                return idx;
+            if (object.equals(getElement(pointerArray[idx]))) {
+                return pointerArray[idx];
             }
             int idx2 = idx + 1;
             while (reqHash == hashcodeArray[idx2]) {
-                if (object.equals(getElement(get))) {
+                if (object.equals(getElement(pointerArray[idx2]))) {
                     return idx2;
                 }
                 idx2++;
             }
             idx2 = idx - 1;
             while (reqHash == hashcodeArray[idx2]) {
-                if (object.equals(getElement(get))) {
+                if (object.equals(getElement(pointerArray[idx2]))) {
                     return idx2;
                 }
                 idx2--;
