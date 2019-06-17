@@ -16,7 +16,7 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements Blocki
         T t;
         do {
             while (!isFull()) {
-                t = borrow();
+                t = poll();
                 if (t != null) {
                     return t;
                 }

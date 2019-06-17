@@ -48,12 +48,12 @@ public  class ImmutablePool<T> implements Pool<T> {
     }
 
     @Override
-    public T borrow() {
+    public T poll() {
         return root.getAvailableAmount() == 0 ? null : getAvailable(root);
     }
 
     @Override
-    public T take() {
+    public T element() {
         if (root.getAvailableAmount() == 0) {
             throw new IllegalStateException("Pool full");
         } else {

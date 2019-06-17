@@ -1,6 +1,10 @@
 package futureUtil;
 
+import pool.BlockingPool;
+
+import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -20,27 +24,30 @@ public class MultiTask<T> {
     }
 
     public void add(CompletableFuture<T> future, String taskId) {
-        futureMap.put(future, null);
-        future.thenAccept(e -> {
-            BlockingQueue<T> queue = queueMap.get(taskId);
-            if (queue == null) {
-                queue = new LinkedBlockingQueue<>();
+        futureMap.put(future, taskId);
+        if (queueMap.containsKey(taskId)) {
+            future.thenAccept(e -> {
+                BlockingQueue<T> queue = queueMap.get(taskId);
                 queue.add(e);
-                queueMap.put(taskId, queue);
-            } else {
-                queue.add(e);
-            }
-            futureMap.remove(future);
-        });
+                futureMap.remove(future);
+            });
+        } else {
+            throw new IllegalArgumentException("Task not exist!");
+        }
     }
 
-    public void add(Supplier<T> supplier, Executor executor, String tackId) {
+    public void add(Supplier<T> supplier, String tackId, Executor executor) {
         add(CompletableFuture.supplyAsync(supplier, executor), tackId);
     }
 
     public T take(String taskId) throws InterruptedException {
-        createTask(taskId);
-        return queueMap.get(taskId).take();
+
+        BlockingQueue<T> queue = queueMap.get(taskId);
+        if (queue == null) {
+            queue = new LinkedBlockingQueue<>();
+            queueMap.put(taskId, queue);
+        }
+        return queue.take();
     }
 
     public T poll(String taskId) {
@@ -51,7 +58,7 @@ public class MultiTask<T> {
     public T remove(String taskId) {
         BlockingQueue<T> queue = queueMap.get(taskId);
         if (queue == null) {
-            throw new NoSuchElementException();
+            throw new IllegalArgumentException("Task not exist!");
         } else {
             return queue.remove();
         }
@@ -68,9 +75,5 @@ public class MultiTask<T> {
 
     public Set<String> taskIdSet() {
         return queueMap.keySet();
-    }
-
-    private void createTask(String taskId) {
-        queueMap.putIfAbsent(taskId, new LinkedBlockingQueue<>());
     }
 }
