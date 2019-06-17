@@ -1,12 +1,15 @@
 package futureUtil;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-public class SingleTask<T> {
+public class SingleTask<T> implements Closeable {
     private ConcurrentMap<CompletableFuture<T>, Void> futureMap;
     private BlockingQueue<T> queue;
+    private volatile boolean signal;
 
     public SingleTask(ConcurrentMap<CompletableFuture<T>, Void> map, BlockingQueue<T> queue) {
         this.futureMap = map;
@@ -48,5 +51,22 @@ public class SingleTask<T> {
 
     public int count() {
         return futureMap.size();
+    }
+
+    public void addListener(TaskListener<T> listener, ExecutorService executor) {
+        executor.submit(() -> {
+            try {
+                while (signal) {
+                    listener.handle(queue.take());
+                }
+            } catch (InterruptedException e) {
+                listener.catchException(e);
+            }
+        });
+    }
+
+    @Override
+    public void close() throws IOException {
+        signal = false;
     }
 }

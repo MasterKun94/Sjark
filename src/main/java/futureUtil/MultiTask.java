@@ -2,16 +2,20 @@ package futureUtil;
 
 import pool.BlockingPool;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class MultiTask<T> {
+public class MultiTask<T> implements Closeable {
     private ConcurrentMap<CompletableFuture<T>, String> futureMap;
     private ConcurrentMap<String, BlockingQueue<T>> queueMap;
+    private volatile boolean signal = true;
 
     public MultiTask(ConcurrentMap<CompletableFuture<T>, String> futureMap, ConcurrentMap<String, BlockingQueue<T>> queueMap) {
         this.futureMap = futureMap;
@@ -75,5 +79,23 @@ public class MultiTask<T> {
 
     public Set<String> taskIdSet() {
         return queueMap.keySet();
+    }
+
+    public void addListener(TaskListener<T> listener, String taskId, ExecutorService executor) {
+        BlockingQueue<T> queue = queueMap.get(taskId);
+        executor.submit(() -> {
+            try {
+                while (signal) {
+                        listener.handle(queue.take());
+                }
+            } catch (InterruptedException e) {
+                listener.catchException(e);
+            }
+        });
+    }
+
+    @Override
+    public void close() throws IOException {
+        signal = false;
     }
 }
