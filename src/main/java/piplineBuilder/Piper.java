@@ -17,9 +17,14 @@ public interface Piper<T, E> {
 
     <R> Piper<T, R> ref(Piper<E, R> quotePip);
 
-    <R, P> Piper<T, P> apply(Supplier<? extends R> supplier, BiFunction<? super E, ? super R, ? extends P> biFunction);
+    <R, P> Piper<T, P> apply(
+            Supplier<? extends R> supplier,
+            BiFunction<? super E, ? super R, ? extends P> biFunction);
 
-    <R, P> Piper<T, P> applyAsync(Supplier<? extends R> supplier, BiFunction<? super E, ? super R, ? extends P> biFunction, Executor executor);
+    <R, P> Piper<T, P> applyAsync(
+            Supplier<? extends R> supplier,
+            BiFunction<? super E, ? super R, ? extends P> biFunction,
+            Executor executor);
 
     Piper<T, E> annotate(Consumer<? super E> annotate);
 

@@ -1,72 +1,26 @@
 package futureUtil;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
-public class SingleTask<T> implements Closeable {
-    private ConcurrentMap<CompletableFuture<T>, Void> futureMap;
-    private BlockingQueue<T> queue;
-    private volatile boolean signal;
+public interface SingleTask<T> extends Closeable {
+    void add(CompletableFuture<T> future);
 
-    public SingleTask(ConcurrentMap<CompletableFuture<T>, Void> map, BlockingQueue<T> queue) {
-        this.futureMap = map;
-        this.queue = queue;
-    }
+    void add(Supplier<T> supplier, Executor executor);
 
-    public SingleTask() {
-        this.futureMap = new ConcurrentHashMap<>();
-        this.queue = new LinkedBlockingQueue<>();
-    }
+    void addAll(List<CompletableFuture<T>> futures);
 
-    public void add(CompletableFuture<T> future) {
-        futureMap.put(future, null);
-        future.thenAccept(e -> {
-            queue.add(e);
-            futureMap.remove(future);
-        });
-    }
+    T take() throws InterruptedException;
 
-    public void add(Supplier<T> supplier, Executor executor) {
-        add(CompletableFuture.supplyAsync(supplier, executor));
-    }
+    T poll();
 
-    public void addAll(List<CompletableFuture<T>> futures) {
-        futures.forEach(this::add);
-    }
+    T remove();
 
-    public T take() throws InterruptedException {
-        return queue.take();
-    }
+    int count();
 
-    public T poll() {
-        return queue.poll();
-    }
-
-    public T remove() {
-        return queue.remove();
-    }
-
-    public int count() {
-        return futureMap.size();
-    }
-
-    public void addListener(TaskListener<T> listener, ExecutorService executor) {
-        executor.submit(() -> {
-            try {
-                while (signal) {
-                    listener.handle(queue.take());
-                }
-            } catch (InterruptedException e) {
-                listener.catchException(e);
-            }
-        });
-    }
-
-    @Override
-    public void close() throws IOException {
-        signal = false;
-    }
+    void addListener(TaskListener<T> listener, ExecutorService executor);
 }

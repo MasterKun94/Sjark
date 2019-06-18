@@ -26,7 +26,9 @@ public class PipBuilder<T, E> implements Piper<T, E> {
         return piper;
     }
 
-    private static <T, R, E> Piper<T, R> with(PipBuilder<T, E> builder, Function<Sjark<E>, Sjark<R>> sjarkMapper) {
+    private static <T, R, E> Piper<T, R> with(
+            PipBuilder<T, E> builder,
+            Function<Sjark<E>, Sjark<R>> sjarkMapper) {
         PipBuilder<T, R> newPiper = new PipBuilder<>();
         newPiper.headSjark = builder.headSjark;
         newPiper.tailSjark = sjarkMapper.apply(builder.tailSjark);
@@ -60,13 +62,20 @@ public class PipBuilder<T, E> implements Piper<T, E> {
     }
 
     @Override
-    public <R, P> Piper<T, P> apply(Supplier<? extends R> supplier, BiFunction<? super E, ? super R, ? extends P> biFunction) {
+    public <R, P> Piper<T, P> apply(
+            Supplier<? extends R> supplier,
+            BiFunction<? super E, ? super R, ? extends P> biFunction)
+    {
         BiFunction<E, Supplier<? extends R>, P> newFunction = (e, s) -> biFunction.apply(e, s.get());
         return with(this, sjark -> sjark._map(e -> newFunction.apply(e, supplier)));
     }
 
     @Override
-    public <R, P> Piper<T, P> applyAsync(Supplier<? extends R> supplier, BiFunction<? super E, ? super R, ? extends P> biFunction, Executor executor) {
+    public <R, P> Piper<T, P> applyAsync(
+            Supplier<? extends R> supplier,
+            BiFunction<? super E, ? super R, ? extends P> biFunction,
+            Executor executor)
+    {
         IteratorSupplier<? extends R> iteratorSupplier = new IteratorSupplier<>(supplier, executor);
         BiFunction<E, Supplier<? extends R>, P> asyncFunction = (e, supplier1) -> biFunction.apply(e, supplier.get());
         return with(this, sjark -> sjark._map(e -> asyncFunction.apply(e, iteratorSupplier)));
