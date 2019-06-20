@@ -21,9 +21,6 @@ public class HttpBuilder {
 
     private HttpRequestBase request;
     private String URL;
-    private HttpHost httpHost;
-    private HttpContext httpContext;
-    private CloseableHttpClient httpClient;
 
     private static HttpBuilder start(HttpRequestBase request, String url) {
 
@@ -99,21 +96,6 @@ public class HttpBuilder {
 
     public HttpBuilder charset(Charset charset) {
         request.setHeader("Charset", charset.toString());
-        return this;
-    }
-
-    public HttpBuilder setHttpHost(HttpHost httpHost) {
-        this.httpHost = httpHost;
-        return this;
-    }
-
-    public HttpBuilder setHttpContext(HttpContext httpContext) {
-        this.httpContext = httpContext;
-        return this;
-    }
-
-    public HttpBuilder setHttpClient(CloseableHttpClient httpClient) {
-        this.httpClient = httpClient;
         return this;
     }
 

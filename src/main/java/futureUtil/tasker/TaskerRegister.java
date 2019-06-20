@@ -1,17 +1,20 @@
 package futureUtil.tasker;
 
-import java.util.function.Supplier;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
-public interface TaskerRegister<T> {
+public interface TaskerRegister<IN, OUT> {
 
-    void request(String taskId, Supplier taskSupplier);
+    CompletableFuture<OUT> request(String taskId, IN in);
 
-    int getInt(String taskId);
+    void addWorker(String taskId, Function<IN, OUT> worker);
 
-    long getLong(String taskId);
+    int count(String taskId);
 
-    String getString(String taskId);
+    int countTask();
 
-    <T> T getObject(String taskId);
+    Set<String> taskIdSet();
+
 
 }
