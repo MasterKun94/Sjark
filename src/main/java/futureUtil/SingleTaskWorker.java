@@ -62,15 +62,20 @@ public class SingleTaskWorker<T> implements SingleTask<T> {
 
     @Override
     public void addListener(TaskListener<T> listener, ExecutorService executor) {
-        executor.submit(() -> {
-            try {
-                while (signal) {
-                    listener.handle(queue.take());
+        addListener(listener, executor, 1);
+    }
+
+    @Override
+    public void addListener(TaskListener<T> listener, ExecutorService executor, int threadNumber) {
+        for (int i = 0; i < threadNumber; i++) {
+            executor.submit(() -> {
+                try {
+                    while (signal) listener.handle(queue.take());
+                } catch (Exception e) {
+                    listener.catchException(e);
                 }
-            } catch (InterruptedException e) {
-                listener.catchException(e);
-            }
-        });
+            });
+        }
     }
 
     @Override

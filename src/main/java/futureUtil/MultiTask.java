@@ -27,5 +27,6 @@ public interface MultiTask<T> extends Closeable {
 
     void addListener(TaskListener<T> listener, String taskId, ExecutorService executor);
 
-    void close() throws IOException;
+    void addListener(TaskListener<T> listener, String taskId, ExecutorService executor, int threadNumber);
+
 }

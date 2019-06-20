@@ -84,17 +84,24 @@ public class MultiTaskWorker<T> implements MultiTask<T> {
 
     @Override
     public void addListener(TaskListener<T> listener, String taskId, ExecutorService executor) {
-        BlockingQueue<T> queue = getOrInit(taskId);
-        executor.submit(() -> {
-            try {
-                while (signal) {
-                        listener.handle(queue.take());
-                }
-            } catch (InterruptedException e) {
-                listener.catchException(e);
-            }
-        });
+        addListener(listener, taskId, executor, 1);
     }
+
+    @Override
+    public void addListener(TaskListener<T> listener, String taskId, ExecutorService executor, int threadNumber) {
+        BlockingQueue<T> queue = getOrInit(taskId);
+        for (int i = 0; i < threadNumber; i++) {
+            Runnable runnable = () -> {
+                try {
+                    while (signal) listener.handle(queue.take());
+                } catch (Exception e) {
+                    listener.catchException(e);
+                }
+            };
+            executor.submit(runnable);
+        }
+    }
+
 
     @Override
     public void close() throws IOException {

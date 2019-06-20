@@ -23,4 +23,6 @@ public interface SingleTask<T> extends Closeable {
     int count();
 
     void addListener(TaskListener<T> listener, ExecutorService executor);
+
+    void addListener(TaskListener<T> listener, ExecutorService executor, int threadNumber);
 }
