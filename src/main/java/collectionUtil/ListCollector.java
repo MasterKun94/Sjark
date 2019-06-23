@@ -5,16 +5,13 @@ import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class ListCollector<T> implements Collector<T> {
     private final Collection<T> contents;
 
     ListCollector(Collection<T> contents) {
         this.contents = contents;
-    }
-
-    public Collection<T> get() {
-        return contents;
     }
 
     @Override
@@ -62,8 +59,13 @@ public class ListCollector<T> implements Collector<T> {
     }
 
     @Override
+    public Collector<T> distinct() {
+        return null;//TODO
+    }
+
+    @Override
     public boolean forAll(Predicate<? super T> predicate) {
-        return exists(predicate.negate());
+        return !exists(predicate.negate());
     }
 
     @Override
@@ -149,5 +151,9 @@ public class ListCollector<T> implements Collector<T> {
         };
 
         return reduceBy(keyGetter, function, biFunction);
+    }
+
+    public Collection<T> get() {
+        return contents;
     }
 }

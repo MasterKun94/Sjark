@@ -8,6 +8,8 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public interface TupleCollector<K, V> {
+
+
     TupleCollector<K, V> foldByKey(BinaryOperator<V> operator);
 
     <R> TupleCollector<K, R> reduceByKey(
