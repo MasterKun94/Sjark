@@ -154,10 +154,12 @@ public interface Collector<T> {
 
      /**
       * Performs a fold on the elements of this collector, the element is fold by the
-      * given {@code keyFunction} function
+      * given {@code keyFunction} function, elements group by the same {@code keyFunction}
+      * results are apply to the given {@code accumulator}, and the results are the
+      * elements of the returned collector
       *
       * @param keyFunction a function to apply to each element to generate key that to
-      *                    be reduced by
+      *                    be fold by
       * @param accumulator an associative function for combining two values
       * @param <K> The type of the key
       * @return the new collector
@@ -167,24 +169,45 @@ public interface Collector<T> {
              BinaryOperator<T> accumulator);
 
      /**
-      * @param keyGetter
-      * @param mapper
-      * @param accumulator
-      * @param <K>
-      * @param <R>
-      * @return
+      * Performs a reduction on the elements of this collector, the element is reduced by the
+      * given {@code keyFunction} function, elements group by the same {@code keyFunction}
+      * results are apply to the given {@code accumulator}, and the results are the
+      * elements of the returned collector
+      *
+      * @param keyFunction a function to apply to each element to generate key that to
+      *                    be reduced by
+      * @param mapper a function for incorporating an additional element into a result
+      * @param accumulator an associative function for combining two values
+      * @param <K> The type of the key
+      * @param <R> The type of the result
+      * @return the new collector
       */
      <K, R> Collector<R> reduceBy(
-             Function<? super T, ? extends K> keyGetter,
+             Function<? super T, ? extends K> keyFunction,
              Function<? super T, ? extends R> mapper,
              BiFunction<? super R, ? super T, ? extends R> accumulator);
 
      /**
-      * @param key
+      * Returns a collector consisting of the lists of elements that group by the given
+      * {@code keyFunction} function, this is equivalent to :
+      * {@code
+      *        Function<T, List<T>> mapper = t -> {
+      *            List<T> list = new ArrayList();
+      *            list.add(t);
+      *            return list;
+      *        }
+      *        BiFunction<List<T>, T, List<T>> mapper = (list, t) -> {
+      *            list.add(t);
+      *            return list;
+      *        }
+      *        reduceBy(keyFunction, mapper, accumulator);
+      * }
+      *
+      * @param keyFunction
       * @param <K>
       * @return
       */
-     <K> Collector<List<T>> groupBy(Function<? super T, ? extends K> key);
+     <K> Collector<List<T>> groupBy(Function<? super T, ? extends K> keyFunction);
 
      /**
       * @return

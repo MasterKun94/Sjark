@@ -124,21 +124,21 @@ public class ListCollector<T> implements Collector<T> {
 
     @Override
     public <K, R> Collector<R> reduceBy(
-            Function<? super T, ? extends K> keyGetter,
+            Function<? super T, ? extends K> keyFunction,
             Function<? super T, ? extends R> mapper,
             BiFunction<? super R, ? super T, ? extends R> accumulator)
     {
         Map<K, R> map = new HashMap<>();
         K key;
         for (T element : contents) {
-            key = keyGetter.apply(element);
+            key = keyFunction.apply(element);
             map.compute(key, (k, r) -> r == null ? mapper.apply(element) : accumulator.apply(r, element));
         }
         return Collector.of(map.values());
     }
 
     @Override
-    public <K> Collector<List<T>> groupBy(Function<? super T, ? extends K> keyGetter) {
+    public <K> Collector<List<T>> groupBy(Function<? super T, ? extends K> keyFunction) {
         Function<T, List<T>> function = t -> {
             List<T> list = new ArrayList<>();
             list.add(t);
@@ -150,7 +150,7 @@ public class ListCollector<T> implements Collector<T> {
             return list1;
         };
 
-        return reduceBy(keyGetter, function, biFunction);
+        return reduceBy(keyFunction, function, biFunction);
     }
 
     public Collection<T> get() {
