@@ -16,7 +16,7 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements Blocki
         T t;
         do {
             while (!isFull()) {
-                t = poll();
+                t = borrow();
                 if (t != null) {
                     return t;
                 }
@@ -36,7 +36,7 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements Blocki
             }
         } while (box.isSendBack());
 
-        return getElement(box.getPointer());
+        return getElement(box.getPayload());
     }
 
     @Override
@@ -50,7 +50,7 @@ public class ImmutableBlockingPool<T> extends ImmutablePool<T> implements Blocki
         if (getCounter(index) == 1) {
             Box box = blockingQueue.poll();
             if (box != null) {
-                box.setPointer(index);
+                box.setPayload(index);
                 box.notify();
                 return 0;
             }

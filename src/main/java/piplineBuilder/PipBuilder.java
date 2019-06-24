@@ -1,48 +1,44 @@
 package piplineBuilder;
 
-import piplineBuilder.sjark.IteratorSupplier;
-import piplineBuilder.sjark.Sjark;
-import piplineBuilder.sjark.SjarkIf;
-
 import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.function.*;
 
 public class PipBuilder<T, E> implements Piper<T, E> {
-    private Sjark<T> headSjark;
-    private Sjark<E> tailSjark;
+    private Flange<T> headFlange;
+    private Flange<E> tailFlange;
 
     public static <R> Piper<R, R> start() {
         PipBuilder<R, R> piper = new PipBuilder<>();
-        piper.tailSjark = new Sjark<>();
-        piper.headSjark = piper.tailSjark;
+        piper.tailFlange = new Flange<>();
+        piper.headFlange = piper.tailFlange;
         return piper;
     }
 
-    public static <R, P> Piper<R, P> start(Sjark<R> headSjark, Sjark<P> tailSjark) {
+    static <R, P> Piper<R, P> start(Flange<R> headFlange, Flange<P> tailFlange) {
         PipBuilder<R, P> piper = new PipBuilder<>();
-        piper.tailSjark = tailSjark;
-        piper.headSjark = headSjark;
+        piper.tailFlange = tailFlange;
+        piper.headFlange = headFlange;
         return piper;
     }
 
     private static <T, R, E> Piper<T, R> with(
             PipBuilder<T, E> builder,
-            Function<Sjark<E>, Sjark<R>> sjarkMapper) {
+            Function<Flange<E>, Flange<R>> sjarkMapper) {
         PipBuilder<T, R> newPiper = new PipBuilder<>();
-        newPiper.headSjark = builder.headSjark;
-        newPiper.tailSjark = sjarkMapper.apply(builder.tailSjark);
+        newPiper.headFlange = builder.headFlange;
+        newPiper.tailFlange = sjarkMapper.apply(builder.tailFlange);
         return newPiper;
     }
 
     @Override
-    public Sjark<T> getHeadSjark() {
-        return headSjark;
+    public Flange<T> getHeadFlange() {
+        return headFlange;
     }
 
     @Override
-    public Sjark<E> getTailSjark() {
-        return tailSjark;
+    public Flange<E> getTailFlange() {
+        return tailFlange;
     }
 
     @Override
@@ -57,8 +53,8 @@ public class PipBuilder<T, E> implements Piper<T, E> {
 
     @Override
     public <R> Piper<T, R> ref(Piper<E, R> quotePip) {
-        this.tailSjark._goto(quotePip.getHeadSjark());
-        return start(this.headSjark, quotePip.getTailSjark());
+        this.tailFlange._goto(quotePip.getHeadFlange());
+        return start(this.headFlange, quotePip.getTailFlange());
     }
 
     @Override
@@ -88,14 +84,14 @@ public class PipBuilder<T, E> implements Piper<T, E> {
 
     @Override
     public Process.If<T, E> _if(Predicate<? super E> predicate) {
-        SjarkIf<E> newIf = this.tailSjark._if(predicate);
-        return new Process.If<>(newIf, headSjark);
+        TrFlange<E> newIf = this.tailFlange._if(predicate);
+        return new Process.If<>(newIf, headFlange);
     }
 
     @Override
     public Process.While<T, E> _while(Predicate<? super E> predicate) {
-        SjarkIf<E> newIf = this.tailSjark._if(predicate);
-        return new Process.While<>(newIf, headSjark);
+        TrFlange<E> newIf = this.tailFlange._if(predicate);
+        return new Process.While<>(newIf, headFlange);
     }
 
     @Override
@@ -111,6 +107,6 @@ public class PipBuilder<T, E> implements Piper<T, E> {
     @Override
     public Process.End<T> _return(Consumer<E> consumer) {
         Piper<T, E> piper = with(this, sjark -> sjark._return(consumer));
-        return new Process.End<>(piper.getHeadSjark());
+        return new Process.End<>(piper.getHeadFlange());
     }
 }

@@ -1,9 +1,9 @@
 package pool;
 
 public interface Pool<T> {
-    T poll();
+    T borrow();
 
-    T element();
+    T request();
 
     int addReference(T t);
 

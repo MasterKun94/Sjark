@@ -4,35 +4,35 @@ public class Box {
     private static final int EMPTY = -1;
     private static final int SEND_BACK = -2;
 
-    private volatile int pointer;
+    private volatile int payload;
 
-    public void setPointer(int pointer) {
-        this.pointer = pointer;
+    public void setPayload(int payload) {
+        this.payload = payload;
     }
 
-    public int getPointer() {
-        return pointer;
+    public int getPayload() {
+        return payload;
     }
 
     public void sendBack() {
-        pointer = SEND_BACK;
+        payload = SEND_BACK;
     }
 
     public boolean isSendBack() {
-        return pointer == SEND_BACK;
+        return payload == SEND_BACK;
     }
 
     public void empty() {
-        pointer = EMPTY;
+        payload = EMPTY;
     }
 
     public boolean isEmpty() {
-        return pointer == EMPTY;
+        return payload == EMPTY;
     }
 
     public static Box emptyBox() {
         Box box = new Box();
-        box.pointer = EMPTY;
+        box.payload = EMPTY;
         return box;
     }
 }

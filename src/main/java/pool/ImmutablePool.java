@@ -1,7 +1,10 @@
 package pool;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public  class ImmutablePool<T> implements Pool<T> {
@@ -9,7 +12,7 @@ public  class ImmutablePool<T> implements Pool<T> {
 
     private final T[] elements;
     private final AtomicIntegerArray referenceCounter;
-    private final PointerIndexer indexer;
+    private final PointerIndexer<T> indexer;
 
     private final Node root;
 
@@ -19,15 +22,16 @@ public  class ImmutablePool<T> implements Pool<T> {
         referenceCounter = new AtomicIntegerArray(capacity);
         Map<T, Integer> map = new TreeMap<>(Comparator.comparingInt(Object::hashCode));
         try {
+            T t;
             for (int i = 0; i < capacity; i++) {
-                T t = clazz.getConstructor().newInstance();
+                t = clazz.getConstructor().newInstance();
                 elements[i] = t;
                 map.put(t, i);
             }
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException  e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        indexer = new PointerIndexer(map);
+        indexer = new HashPointerIndexer(map);
         Stack<Integer> intStack = new Stack<>();
         Stack<Node> nodeStack = new Stack<>();
 
@@ -48,12 +52,12 @@ public  class ImmutablePool<T> implements Pool<T> {
     }
 
     @Override
-    public T poll() {
+    public T borrow() {
         return root.getAvailableAmount() == 0 ? null : getAvailable(root);
     }
 
     @Override
-    public T element() {
+    public T request() {
         if (root.getAvailableAmount() == 0) {
             throw new IllegalStateException("Pool full");
         } else {
@@ -107,12 +111,12 @@ public  class ImmutablePool<T> implements Pool<T> {
 
     @Override
     public int getPointer(T t) {
-        return indexer.findPointer(t);
+        return indexer.index(t);
     }
 
     @Override
-    public T getElement(int i) {
-        return elements[i];
+    public T getElement(int pointer) {
+        return elements[pointer];
     }
 
     @Override
@@ -211,11 +215,11 @@ public  class ImmutablePool<T> implements Pool<T> {
         node.incrementAndGetAmount();
     }
 
-    private class PointerIndexer {
+    public class HashPointerIndexer implements PointerIndexer<T> {
         private final int[] hashcodeArray;
         private final int[] pointerArray;
 
-        private PointerIndexer(Map<T, Integer> map) {
+        private HashPointerIndexer(Map<T, Integer> map) {
             List<T> list = new ArrayList<>(map.keySet());
             list.sort(Comparator.comparingInt(Object::hashCode));
             int listSize = list.size();
@@ -228,7 +232,9 @@ public  class ImmutablePool<T> implements Pool<T> {
                 pointerArray[i] = map.get(o);
             }
         }
-        private int findPointer(T object) {
+
+        @Override
+        public int index(T object) {
 
             int reqHash = object.hashCode();
             int minIdx = 0;
@@ -249,19 +255,19 @@ public  class ImmutablePool<T> implements Pool<T> {
                 }
             } while (reqHash != get);
 
-            if (object.equals(getElement(pointerArray[idx]))) {
+            if (object == getElement(pointerArray[idx])) {
                 return pointerArray[idx];
             }
             int idx2 = idx + 1;
             while (reqHash == hashcodeArray[idx2]) {
-                if (object.equals(getElement(pointerArray[idx2]))) {
+                if (object == getElement(pointerArray[idx2])) {
                     return idx2;
                 }
                 idx2++;
             }
             idx2 = idx - 1;
             while (reqHash == hashcodeArray[idx2]) {
-                if (object.equals(getElement(pointerArray[idx2]))) {
+                if (object == getElement(pointerArray[idx2])) {
                     return idx2;
                 }
                 idx2--;
