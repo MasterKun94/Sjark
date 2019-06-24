@@ -87,13 +87,12 @@ public class HttpBuilder {
     }
 
     public HttpBuilder entity(String entity) {
-        if (request instanceof HttpPost) {
-            ((HttpPost) request).setEntity(new StringEntity(entity, Charsets.UTF_8));
-        } else if (request instanceof HttpPut) {
-            ((HttpPut) request).setEntity(new StringEntity(entity, Charsets.UTF_8));
+        if (request instanceof HttpPost || request instanceof HttpPut) {
+            ((HttpEntityEnclosingRequestBase) request)
+                    .setEntity(new StringEntity(entity, Charsets.UTF_8));
         } else {
-
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(
+                    request.getMethod() + " method not supported");
         }
         return this;
     }
@@ -106,7 +105,8 @@ public class HttpBuilder {
     public <T> HttpResponseBuilder<T> execute(HttpConnector<T> connector) {
         request.setURI(URI.create(urlBuilder.toString()));
 
-        return new HttpResponseBuilder<>(() -> HttpConnector.execute(connector, request));
+        return new HttpResponseBuilder<>(() -> HttpConnector
+                .execute(connector, request));
     }
 
     public class HttpResponseBuilder<T> {
