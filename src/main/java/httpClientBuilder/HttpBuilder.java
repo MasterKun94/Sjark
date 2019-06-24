@@ -20,12 +20,13 @@ public class HttpBuilder {
     private static final String AND = "&";
 
     private HttpRequestBase request;
-    private String URL;
+    private StringBuilder urlBuilder;
+    private boolean haveParam;
 
     private static HttpBuilder start(HttpRequestBase request, String url) {
 
         HttpBuilder builder = new HttpBuilder();
-        builder.URL = url;
+        builder.urlBuilder = new StringBuilder(url);
         builder.request = request;
         return builder;
     }
@@ -50,16 +51,18 @@ public class HttpBuilder {
         if (params == null || params.isEmpty()) {
             return this;
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append("?");
+        urlBuilder.append(haveParam ? "&" : "?");
         Set<String> keys = params.keySet();
         for (String key : keys) {
-            builder.append(key).append(EQ).append(params.get(key)).append(AND);
-
+            param(key, params.get(key));
         }
-        builder.deleteCharAt(builder.length() - 1);
-        URL = URL + builder.toString();
-        System.out.println(URL);
+        return this;
+    }
+
+    public HttpBuilder param(String key, String value) {
+        urlBuilder.append(haveParam ? "&" : "?")
+                .append(key).append("=").append(value);
+        haveParam = true;
         return this;
     }
 
@@ -72,14 +75,14 @@ public class HttpBuilder {
         return this;
     }
 
-    public HttpBuilder rest() {
-        request.setHeader("Accept", "application/json");
-        request.setHeader("Content-Type", "application/json");
+    public HttpBuilder header(String head, String value) {
+        request.setHeader(head, value);
         return this;
     }
 
-    public HttpBuilder header(String head, String value) {
-        request.setHeader(head, value);
+    public HttpBuilder rest() {
+        request.setHeader("Accept", "application/json");
+        request.setHeader("Content-type", "application/json");
         return this;
     }
 
@@ -89,6 +92,7 @@ public class HttpBuilder {
         } else if (request instanceof HttpPut) {
             ((HttpPut) request).setEntity(new StringEntity(entity, Charsets.UTF_8));
         } else {
+
             throw new UnsupportedOperationException();
         }
         return this;
@@ -100,7 +104,7 @@ public class HttpBuilder {
     }
 
     public <T> HttpResponseBuilder<T> execute(HttpConnector<T> connector) {
-        request.setURI(URI.create(URL));
+        request.setURI(URI.create(urlBuilder.toString()));
 
         return new HttpResponseBuilder<>(() -> HttpConnector.execute(connector, request));
     }
