@@ -16,24 +16,24 @@ public class HttpConnector<T> {
     private ResponseHandler<T> responseHandler;
 
 
-    public static <T> T execute(HttpConnector<T> connector, HttpUriRequest request) {
-        if (connector.httpClient == null) connector.httpClient = InstanceHttpClient.getDefault();
-        if (connector.httpHost == null) connector.httpHost = URIUtils.extractHost(request.getURI());
+    public T execute(HttpUriRequest request) {
+        if (httpClient == null) httpClient = InstanceHttpClient.getDefault();
+        if (httpHost == null) httpHost = URIUtils.extractHost(request.getURI());
         org.apache.http.client.ResponseHandler<T> responseHandler = response -> {
             try {
-                return connector.responseHandler.handleResponse(request, response);
+                return this.responseHandler.handleResponse(request, response);
             } catch (IOException e) {
-                return connector.responseHandler.handleException(request, e);
+                return this.responseHandler.handleException(request, e);
             }
         };
         try {
-            return connector.httpClient.execute(
-                    connector.httpHost,
+            return httpClient.execute(
+                    httpHost,
                     request,
                     responseHandler,
-                    connector.httpContext);
+                    httpContext);
         } catch (IOException e) {
-            return connector.responseHandler.handleException(request, e);
+            return this.responseHandler.handleException(request, e);
         }
     }
 

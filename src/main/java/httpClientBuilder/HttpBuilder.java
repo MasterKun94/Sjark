@@ -16,8 +16,6 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public class HttpBuilder {
-    private static final String EQ = "=";
-    private static final String AND = "&";
 
     private HttpRequestBase request;
     private StringBuilder urlBuilder;
@@ -104,9 +102,7 @@ public class HttpBuilder {
 
     public <T> HttpResponseBuilder<T> execute(HttpConnector<T> connector) {
         request.setURI(URI.create(urlBuilder.toString()));
-
-        return new HttpResponseBuilder<>(() -> HttpConnector
-                .execute(connector, request));
+        return new HttpResponseBuilder<>(() -> connector.execute(request));
     }
 
     public class HttpResponseBuilder<T> {
