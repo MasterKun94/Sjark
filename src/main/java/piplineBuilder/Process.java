@@ -1,8 +1,5 @@
 package piplineBuilder;
 
-import piplineBuilder.sjark.Sjark;
-import piplineBuilder.sjark.SjarkIf;
-
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
@@ -13,67 +10,67 @@ import static piplineBuilder.PipBuilder.start;
 public class Process {
 
     public static class If<T, P> {
-        private SjarkIf<P> sjarkIf;
-        private Sjark<T> headSjark;
-        If(SjarkIf<P> sjarkIf, Sjark<T> headSjark) {
-            this.sjarkIf = sjarkIf;
-            this.headSjark = headSjark;
+        private TrFlange<P> trFlange;
+        private Flange<T> headFlange;
+        If(TrFlange<P> trFlange, Flange<T> headFlange) {
+            this.trFlange = trFlange;
+            this.headFlange = headFlange;
         }
 
         public Then<T, P> _then(Function<Piper<P, P>, End<P>> then) {
-            SjarkIf<P> newIf = sjarkIf._then(then.apply(start()).getPip());
-            return new Then<>(newIf, headSjark);
+            TrFlange<P> newIf = trFlange._then(then.apply(start()).getPip());
+            return new Then<>(newIf, headFlange);
         }
 
         public Piper<T, P> _do(Function<Piper<P, P>, Piper<P, P>> then) {
-            Sjark<P> newSjark = new Sjark<>();
-            sjarkIf._then(then.apply(start())._return(newSjark.getPip()).getPip());
-            sjarkIf._else(newSjark.getPip());
-            return PipBuilder.start(headSjark, newSjark);
+            Flange<P> newFlange = new Flange<>();
+            trFlange._then(then.apply(start())._return(newFlange.getPip()).getPip());
+            trFlange._else(newFlange.getPip());
+            return PipBuilder.start(headFlange, newFlange);
         }
     }
 
     public static class Then<T, P> {
-        private SjarkIf<P> sjarkIf;
-        private Sjark<T> headSjark;
-        Then(SjarkIf<P> sjarkIf, Sjark<T> headSjark) {
-            this.sjarkIf = sjarkIf;
-            this.headSjark = headSjark;
+        private TrFlange<P> trFlange;
+        private Flange<T> headFlange;
+        Then(TrFlange<P> trFlange, Flange<T> headFlange) {
+            this.trFlange = trFlange;
+            this.headFlange = headFlange;
         }
 
         public End<T> _else(Function<Piper<P, P>, End<P>> orElse) {
-            sjarkIf._else(orElse.apply(start()).getPip());
-            return new End<>(this.headSjark);
+            trFlange._else(orElse.apply(start()).getPip());
+            return new End<>(this.headFlange);
         }
     }
 
     public static class While<T, P> {
-        private SjarkIf<P> sjarkIf;
-        private Sjark<T> headSjark;
-        While(SjarkIf<P> sjarkIf, Sjark<T> headSjark) {
-            this.sjarkIf = sjarkIf;
-            this.headSjark = headSjark;
+        private TrFlange<P> trFlange;
+        private Flange<T> headFlange;
+        While(TrFlange<P> trFlange, Flange<T> headFlange) {
+            this.trFlange = trFlange;
+            this.headFlange = headFlange;
         }
 
         public Piper<T, P> _do(Function<Piper<P, P>, Piper<P, P>> then) {
-            Function<Piper<P, P>, End<P>> afterWhile = pip -> then.apply(pip)._return(sjarkIf.getPip());
-            sjarkIf._then(afterWhile.apply(start()).getPip());
-            return PipBuilder.start(headSjark, sjarkIf.getThatSjark());
+            Function<Piper<P, P>, End<P>> afterWhile = pip -> then.apply(pip)._return(trFlange.getPip());
+            trFlange._then(afterWhile.apply(start()).getPip());
+            return PipBuilder.start(headFlange, trFlange.getThatFlange());
         }
     }
 
     public static class End<T> {
-        private Sjark<T> headSjark;
-        End(Sjark<T> headSjark) {
-            this.headSjark = headSjark;
+        private Flange<T> headFlange;
+        End(Flange<T> headFlange) {
+            this.headFlange = headFlange;
         }
 
         public Consumer<T> getPip() {
-            return headSjark.getPip();
+            return headFlange.getPip();
         }
 
         public void run(T source) {
-            headSjark.getPip().accept(source);
+            headFlange.getPip().accept(source);
         }
 
         public void run(Collection<T> sources) {

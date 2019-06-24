@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kunkun</groupId>
-    <artifactId>sjark</artifactId>
+    <artifactId>flange</artifactId>
     <version>1.0-SNAPSHOT</version>
     <build>
         <plugins>

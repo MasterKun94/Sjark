@@ -1,15 +1,13 @@
 package piplineBuilder;
 
-import piplineBuilder.sjark.Sjark;
-
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.function.*;
 
 public interface Piper<T, E> {
-    Sjark<T> getHeadSjark();
+    Flange<T> getHeadFlange();
 
-    Sjark<E> getTailSjark();
+    Flange<E> getTailFlange();
 
     <R> Piper<T, R> map(Function<? super E, ? extends R> mapper);
 
