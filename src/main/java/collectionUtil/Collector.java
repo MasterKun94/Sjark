@@ -7,11 +7,14 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * @param <T>
+ */
 public interface Collector<T> {
 
      /**
-      * Returns a collector consisting of the results of applying the given
-      * function to the elements of this collector.
+      * Returns a collector consisting of the results of applying the given function to
+      * the elements of this collector.
       *
       * @param mapper a function to apply to each element
       * @param <R> The element type of the new stream
@@ -45,7 +48,8 @@ public interface Collector<T> {
       * @param <R> The element type of the new collector
       * @return the new collector
       */
-     <R> Collector<R> flatMap(Function<? super T, ? extends Collection<? extends R>> flatMapper);
+     <R> Collector<R> flatMap(
+             Function<? super T, ? extends Collection<? extends R>> flatMapper);
 
      /**
       * Returns a collector consisting of the elements of this collector that match
@@ -133,27 +137,60 @@ public interface Collector<T> {
       * identity value and an associative accumulation function, and returns the
       * reduced value. This is equivalent to:
       * {@code
-      *     U result = identity;
-      *     for (U element : this collector)
-      *         result = accumulator.apply(result, element)
-      *     return result;
+      *   R result = null;
+      *   boolean isFirst = true;
+      *   for (T element : contents) {
+      *        if (isFirst) {
+      *             result = idMapper.apply(element);
+      *             isFirst = false;
+      *        } else {
+      *             result = accumulator.apply(result, element);
+      *        }
+      *   }
+      *   return result;
       * }
       *
       * <p>The {@code identity} value must be an identity for the combiner
       * function.  This means that for all {@code u}, {@code combiner(identity, u)}
       * is equal to {@code u}.
       *
-      * @param identity the identity value for the accumulating function
+      * @param identityMapper the identity function for the accumulating function
       * @param accumulator an associative function for combining two values
       * @param <R> The type of the result
       * @return the result of the reduction
       */
      <R> R reduce(
-             R identity,
+             Function<T, R> identityMapper,
              BiFunction<? super R, ? super T, ? extends R> accumulator);
+     /**
+      * Performs a reduction on the elements of this collector, using the provided
+      * identity value and an associative accumulation function, and returns the
+      * reduced value. This is equivalent to:
+      * {@code
+      *   R result = null;
+      *   boolean isFirst = true;
+      *   for (T element : contents) {
+      *        if (isFirst) {
+      *             result = element;
+      *             isFirst = false;
+      *        } else {
+      *             result = accumulator.apply(result, element);
+      *        }
+      *   }
+      *   return result;
+      * }
+      *
+      * <p>The {@code identity} value must be an identity for the combiner
+      * function.  This means that for all {@code u}, {@code combiner(identity, u)}
+      * is equal to {@code u}.
+      *
+      * @param accumulator an associative function for combining two values
+      * @return the result of the reduction
+      */
+     T reduce(BinaryOperator<T> accumulator);
 
      /**
-      * Performs a fold on the elements of this collector, the element is fold by the
+      * Performs a reduction on the elements of this collector, the element is fold by the
       * given {@code keyFunction} function, elements group by the same {@code keyFunction}
       * results are apply to the given {@code accumulator}, and the results are the
       * elements of the returned collector
@@ -164,7 +201,7 @@ public interface Collector<T> {
       * @param <K> The type of the key
       * @return the new collector
       */
-     <K> Collector<T> foldBy(
+     <K> Collector<T> reduceBy(
              Function<? super T, ? extends K> keyFunction,
              BinaryOperator<T> accumulator);
 
@@ -179,7 +216,7 @@ public interface Collector<T> {
       * @param mapper a function for incorporating an additional element into a result
       * @param accumulator an associative function for combining two values
       * @param <K> The type of the key
-      * @param <R> The type of the result
+      * @param <R> The element type of the result
       * @return the new collector
       */
      <K, R> Collector<R> reduceBy(
@@ -196,27 +233,30 @@ public interface Collector<T> {
       *            list.add(t);
       *            return list;
       *        }
-      *        BiFunction<List<T>, T, List<T>> mapper = (list, t) -> {
+      *        BiFunction<List<T>, T, List<T>> accumulator = (list, t) -> {
       *            list.add(t);
       *            return list;
       *        }
       *        reduceBy(keyFunction, mapper, accumulator);
       * }
       *
-      * @param keyFunction
-      * @param <K>
-      * @return
+      * @param keyFunction a function to apply to each element to generate key that to
+      *                    be reduced by
+      * @param <K> The element type of the result
+      * @return the new collector
       */
      <K> Collector<List<T>> groupBy(Function<? super T, ? extends K> keyFunction);
 
      /**
-      * @return
+      * @return the {@code java.util.collection} source the collector contains
       */
      Collection<T> get();
 
      /**
-      * @param list
-      * @param <E>
+      * returns a collector that contains the given {@code list} source
+      *
+      * @param list the collector source
+      * @param <E> the element type of the new collector
       * @return
       */
      static <E> Collector<E> of(Collection<E> list) {

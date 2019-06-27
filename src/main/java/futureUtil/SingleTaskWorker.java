@@ -1,12 +1,11 @@
 package futureUtil;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-public class SingleTaskWorker<T> implements SingleTask<T> {
+public class SingleTaskWorker<T> implements SingleTaskPool<T> {
     private final ConcurrentMap<CompletableFuture<T>, Void> futureMap;
     private final BlockingQueue<T> queue;
     private volatile boolean signal;
