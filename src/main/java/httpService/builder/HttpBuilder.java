@@ -1,11 +1,8 @@
-package httpClientBuilder;
+package httpService.builder;
 
 import org.apache.commons.codec.Charsets;
-import org.apache.http.HttpHost;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.protocol.HttpContext;
 
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -24,6 +21,7 @@ public class HttpBuilder {
     private static HttpBuilder start(HttpRequestBase request, String url) {
 
         HttpBuilder builder = new HttpBuilder();
+        url = url.startsWith("http://") ? url : "http://" + url;
         builder.urlBuilder = new StringBuilder(url);
         builder.request = request;
         return builder;
@@ -49,7 +47,6 @@ public class HttpBuilder {
         if (params == null || params.isEmpty()) {
             return this;
         }
-        urlBuilder.append(haveParam ? "&" : "?");
         Set<String> keys = params.keySet();
         for (String key : keys) {
             param(key, params.get(key));
@@ -101,6 +98,7 @@ public class HttpBuilder {
     }
 
     public <T> HttpResponseBuilder<T> execute(HttpConnector<T> connector) {
+        System.out.println(urlBuilder.toString());
         request.setURI(URI.create(urlBuilder.toString()));
         return new HttpResponseBuilder<>(() -> connector.execute(request));
     }

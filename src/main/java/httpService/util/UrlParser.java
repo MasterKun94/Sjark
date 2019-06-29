@@ -1,7 +1,8 @@
-package rpcTool;
+package httpService.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class UrlParser {
     private String[] url;
@@ -14,6 +15,7 @@ public class UrlParser {
             String s = url[i];
             if (s.startsWith("{") && s.endsWith("}")) {
                 index.add(i);
+                url[i] = url[i].substring(1, s.length() - 1);
             }
         }
     }
@@ -47,11 +49,15 @@ public class UrlParser {
         }
     }
 
-    @Override
-    public String toString() {
+    public String parsePath(Map<String, String> pathVarMap) {
+        String[] parseUrl = url.clone();
+        for (int i = 0; i < index.size(); i++) {
+            int idx = index.get(i);
+            parseUrl[idx] = pathVarMap.get(parseUrl[idx]);
+        }
         boolean isFirst = true;
         StringBuilder finalUrl = new StringBuilder();
-        for (String s : url) {
+        for (String s : parseUrl) {
             if (isFirst) {
                 finalUrl.append(s.trim());
                 isFirst = false;
@@ -61,4 +67,19 @@ public class UrlParser {
         }
         return finalUrl.toString();
     }
+
+//    @Override
+//    public String toString() {
+//        boolean isFirst = true;
+//        StringBuilder finalUrl = new StringBuilder();
+//        for (String s : url) {
+//            if (isFirst) {
+//                finalUrl.append(s.trim());
+//                isFirst = false;
+//            } else {
+//                finalUrl.append("/").append(s.trim());
+//            }
+//        }
+//        return finalUrl.toString();
+//    }
 }

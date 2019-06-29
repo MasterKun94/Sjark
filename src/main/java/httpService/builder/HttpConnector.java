@@ -1,4 +1,4 @@
-package httpClientBuilder;
+package httpService.builder;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpUriRequest;

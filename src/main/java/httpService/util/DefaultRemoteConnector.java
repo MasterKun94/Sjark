@@ -1,45 +1,59 @@
-package rpcTool;
+package httpService.util;
 
 import com.alibaba.fastjson.JSON;
-import httpClientBuilder.HttpBuilder;
-import httpClientBuilder.HttpConnector;
+import httpService.HttpMethod;
+import httpService.builder.HttpBuilder;
+import httpService.builder.HttpConnector;
 import org.apache.http.util.EntityUtils;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 public class DefaultRemoteConnector implements RemoteConnector {
 
     @Override
     public <IN> String get(
             String url,
-            String method,
+            HttpMethod method,
             Map<String, String> param,
             Map<String, String> headers,
             IN entity) {
 
-        return getStringEntity(url, method, param, headers, entity);
+        return httpBuilder(url, method, param, headers, entity).sync();
+    }
+
+    @Override
+    public <IN> CompletableFuture<String> getAsync(
+            String url,
+            HttpMethod method,
+            Map<String, String> param,
+            Map<String, String> headers,
+            IN entity,
+            ExecutorService executor) {
+        return httpBuilder(url, method, param, headers, entity).async(executor);
     }
 
 
-    private <IN> String getStringEntity(
+    public <IN> HttpBuilder.HttpResponseBuilder<String> httpBuilder(
             String url,
-            String method,
+            HttpMethod method,
             Map<String, String> param,
             Map<String, String> headers,
             IN entity) {
 
         HttpBuilder builder;
-        switch (method.toLowerCase()) {
-            case "get":
+        switch (method) {
+            case GET:
                 builder = HttpBuilder.get(url);
                 break;
-            case "post":
+            case POST:
                 builder = HttpBuilder.post(url);
                 break;
-            case "put":
+            case PUT:
                 builder = HttpBuilder.put(url);
                 break;
-            case "delete":
+            case DELETE:
                 builder = HttpBuilder.delete(url);
                 break;
             default:
@@ -55,9 +69,8 @@ public class DefaultRemoteConnector implements RemoteConnector {
         if (entity != null) {
             builder.entity(JSON.toJSONString(entity));
         }
-        return builder
-                .execute(HttpConnector.of((
-                    (request, response) -> EntityUtils.toString(response.getEntity()))))
-                .sync();
+
+        return builder.execute(HttpConnector.of((
+                (req, res) -> EntityUtils.toString(res.getEntity()))));
     }
 }

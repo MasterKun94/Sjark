@@ -1,8 +1,7 @@
-package httpClientBuilder;
+package httpService.builder;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
 
 import java.io.IOException;
 
