@@ -12,6 +12,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+/**
+ * 一个http请求建造器
+ */
 public class HttpBuilder {
 
     private HttpRequestBase request;
@@ -21,8 +24,10 @@ public class HttpBuilder {
     private static HttpBuilder start(HttpRequestBase request, String url) {
 
         HttpBuilder builder = new HttpBuilder();
-        url = url.startsWith("http://") ? url : "http://" + url;
-        builder.urlBuilder = new StringBuilder(url);
+        StringBuilder stringBuilder = new StringBuilder();
+        builder.urlBuilder = url.startsWith("http://") ?
+                stringBuilder.append(url) :
+                stringBuilder.append("http://").append(url);
         builder.request = request;
         return builder;
     }

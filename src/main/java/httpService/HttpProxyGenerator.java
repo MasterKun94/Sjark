@@ -32,6 +32,9 @@ import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * http请求代理生成器，
+ */
 public class HttpProxyGenerator {
     private static final RemoteConnector connector = new DefaultRemoteConnector();
     private final InvocationHandler httpProxy = new HttpProxy();
@@ -40,15 +43,34 @@ public class HttpProxyGenerator {
 
     public HttpProxyGenerator() { }
 
+
+    /**
+     * 如果被代理的接口有方法返回{@code Future}类型的话建议使用此构造器实例化对象，异步线程会在
+     * 给定的{@code executor}线程池中运行，如果不适用此构造器，那么也会自动生成一个线程池：
+     * {@code Executors.newFixedThreadPool(20)} 供{@code Future} 的线程使用
+     *
+     * @param executor 供异步线程运行的线程池
+     */
     public HttpProxyGenerator(ExecutorService executor) {
         this.executor = executor;
     }
 
+    /**
+     * 生成一个代理对象，参数是一个接口，且通过{@link httpService.annotation} 中的注解标注
+     * 请求类型，url，参数，头部信息，请求体等信息代理生成器会根据注解自动生成一个代理的对象
+     *
+     * @param clazz 被代理的接口的class对象
+     * @param <T> 代理对象的类型
+     * @return 一个实例化的代理对象
+     */
     @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clazz) {
         if (clazz.isAnnotationPresent(ContentPath.class)) {
             ContentPath rpcService = clazz.getAnnotation(ContentPath.class);
             headUrl = rpcService.value();
+            if (headUrl.startsWith("http://")) {
+                headUrl = headUrl.substring("http://".length());
+            }
         } else {
             headUrl = "";
         }
@@ -60,7 +82,7 @@ public class HttpProxyGenerator {
     }
 
     @SuppressWarnings("unchecked")
-    public class HttpProxy implements InvocationHandler {
+    private class HttpProxy implements InvocationHandler {
         private Map<Method, Function<Object[], Object>> methodMap = new HashMap<>();
 
         @Override
@@ -68,6 +90,7 @@ public class HttpProxyGenerator {
             return methodMap.computeIfAbsent(method, k -> init(method)).apply(args);
         }
 
+        //第一次调对象的某个方法时会调用该方法，并将该方法返回的函数放入{@code methodMap}中，
         private Function<Object[], Object> init(Method method) {
 
             String tailUrl;
@@ -108,7 +131,7 @@ public class HttpProxyGenerator {
             Parameter[] parameters = method.getParameters();
             for (int i = 0; i < parameters.length; i++) {
                 Parameter parameter = parameters[i];
-                for (Annotation annotation : parameter.getAnnotations()) {
+                for (Annotation annotation : parameter.getAnnotations())
                     if (annotation instanceof HttpBody) {
                         if (entityIndex == -1) {
                             entityIndex = i;
@@ -136,7 +159,6 @@ public class HttpProxyGenerator {
                         }
                         pathVarMap.put(name, i);
                     }
-                }
             }
 
             BiFunction<Map<String, Integer>, Object[], Map<String, String>> getArgByIdx =
@@ -169,13 +191,14 @@ public class HttpProxyGenerator {
             );
         }
 
+        //根据解析注解得到的参数返回代理方法的函数
         private Function<Object[], Object> initProxyMethodFunction(
                 Method method,
                 int entityIndex,
                 HttpMethod httpMethod,
                 Function<Object[], Map<String, String>> headersMapFunction,
                 Function<Object[], Map<String, String>> paramsMapFunction,
-                Function<Object[], String> pathMapFunction) {
+                Function<Object[], String> pathFunction) {
 
             Class returnClazz = method.getReturnType();
             Type genericReturnType = method.getGenericReturnType();
@@ -196,7 +219,7 @@ public class HttpProxyGenerator {
                 objectParser = parseObject(finalClazz, finalType);
 
                 return arguments -> connector.getAsync(
-                        pathMapFunction.apply(arguments),
+                        pathFunction.apply(arguments),
                         httpMethod,
                         paramsMapFunction.apply(arguments),
                         headersMapFunction.apply(arguments),
@@ -213,7 +236,7 @@ public class HttpProxyGenerator {
                 objectParser = parseObject(returnClazz, genericReturnType);
                 return arguments -> {
                     String responseEntity = connector.get(
-                            pathMapFunction.apply(arguments),
+                            pathFunction.apply(arguments),
                             httpMethod,
                             paramsMapFunction.apply(arguments),
                             headersMapFunction.apply(arguments),
@@ -221,12 +244,12 @@ public class HttpProxyGenerator {
                     return objectParser.apply(responseEntity);
                 };
             }
-
         }
 
+        //根据代理方法的返回类型得到解析对象的函数
         private Function<String, Object> parseObject(
                 Class returnClazz,
-                Type genericReturnType) {
+                Type genReturnType) {
 
             if (returnClazz == void.class) {
                 return str -> null;
@@ -247,33 +270,39 @@ public class HttpProxyGenerator {
             }
 
             if (Collection.class.isAssignableFrom(returnClazz)) {
-                try {
-                    Function<String, Collection> listFunction;
-                    if (genericReturnType instanceof ParameterizedType) {
-                        ParameterizedType returnType = (ParameterizedType) genericReturnType;
-                        Type typeArg = returnType.getActualTypeArguments()[0];
+                Function<String, List> listFunction;
+                if (genReturnType instanceof ParameterizedType) {
+                    ParameterizedType returnType = (ParameterizedType) genReturnType;
+                    Type typeArg = returnType.getActualTypeArguments()[0];
+                    try {
                         Class clazz = Class.forName(typeArg.getTypeName());
                         listFunction = res -> JSON.parseArray(res, clazz);
-                    } else {
-                        listFunction = JSON::parseArray;
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
                     }
-                    if (returnClazz.isAssignableFrom(ArrayList.class)) {
-                        return listFunction.andThen(c -> c);
-                    }
-                    if (returnClazz.isAssignableFrom(HashSet.class)) {
-                        return listFunction.andThen(HashSet::new);
-                    }
+                } else {
+                    listFunction = JSON::parseArray;
+                }
+                if (returnClazz.isAssignableFrom(ArrayList.class)) {
+                    return listFunction.andThen(c -> c);
+                }
+                if (returnClazz.isAssignableFrom(HashSet.class)) {
+                    return listFunction.andThen(HashSet::new);
+                }
 
-                    Constructor constructor = returnClazz.getConstructor(Collection.class);
-                    return listFunction.andThen(collection -> {
-                        try {
-                            return constructor.newInstance(collection);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
+                for (Constructor constructor : returnClazz.getConstructors()) {
+                    if (constructor.getParameterCount() == 1) {
+                        Class clazz = constructor.getParameterTypes()[0];
+                        if (clazz.isAssignableFrom(List.class)) {
+                            return listFunction.andThen(collection -> {
+                                try {
+                                    return constructor.newInstance(collection);
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
                         }
-                    });
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    }
                 }
             }
             return res -> JSON.parseObject(res, returnClazz);
