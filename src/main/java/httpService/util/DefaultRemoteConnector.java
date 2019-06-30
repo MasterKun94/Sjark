@@ -13,34 +13,33 @@ import java.util.concurrent.ExecutorService;
 public class DefaultRemoteConnector implements RemoteConnector {
 
     @Override
-    public <IN> String get(
+    public String get(
             String url,
             HttpMethod method,
             Map<String, String> param,
             Map<String, String> headers,
-            IN entity) {
+            Object entity) {
 
-        return httpBuilder(url, method, param, headers, entity).sync();
+        return createRequest(url, method, param, headers, entity).sync();
     }
 
     @Override
-    public <IN> CompletableFuture<String> getAsync(
+    public CompletableFuture<String> getAsync(
             String url,
             HttpMethod method,
             Map<String, String> param,
             Map<String, String> headers,
-            IN entity,
+            Object entity,
             ExecutorService executor) {
-        return httpBuilder(url, method, param, headers, entity).async(executor);
+        return createRequest(url, method, param, headers, entity).async(executor);
     }
 
-
-    public <IN> HttpBuilder.HttpResponseBuilder<String> httpBuilder(
+    private HttpBuilder.HttpResponseBuilder<String> createRequest(
             String url,
             HttpMethod method,
             Map<String, String> param,
             Map<String, String> headers,
-            IN entity) {
+            Object entity) {
 
         HttpBuilder builder;
         switch (method) {
