@@ -20,12 +20,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -41,12 +36,17 @@ public class HttpProxyGenerator {
     private ExecutorService executor;
     private String headUrl;
 
+    /**
+     * 实例化一个代理生成器对象，如果被代理的接口有方法返回{@code Future}类型，建议使用构造函数
+     * {@code HttpProxyGenerator(ExecutorService executor)}
+     *
+     */
     public HttpProxyGenerator() { }
 
 
     /**
-     * 如果被代理的接口有方法返回{@code Future}类型的话建议使用此构造器实例化对象，异步线程会在
-     * 给定的{@code executor}线程池中运行，如果不适用此构造器，那么也会自动生成一个线程池：
+     * 如果被代理的接口有方法返回{@code Future}类型的话建议使用此构造函数实例化对象，异步线程会
+     * 在给定的{@code executor}线程池中运行，如果不适用此构造器，那么也会自动生成一个线程池：
      * {@code Executors.newFixedThreadPool(20)} 供{@code Future} 的线程使用
      *
      * @param executor 供异步线程运行的线程池
@@ -246,7 +246,7 @@ public class HttpProxyGenerator {
             }
         }
 
-        //根据代理方法的返回类型得到解析对象的函数
+        //根据代理方法的返回类型信息得到解析对象函数
         private Function<String, Object> parseObject(
                 Class returnClazz,
                 Type genReturnType) {
@@ -286,8 +286,14 @@ public class HttpProxyGenerator {
                 if (returnClazz.isAssignableFrom(ArrayList.class)) {
                     return listFunction.andThen(c -> c);
                 }
+                if (returnClazz.isAssignableFrom(LinkedList.class)) {
+                    return listFunction.andThen(LinkedList::new);
+                }
                 if (returnClazz.isAssignableFrom(HashSet.class)) {
                     return listFunction.andThen(HashSet::new);
+                }
+                if (returnClazz.isAssignableFrom(TreeSet.class)) {
+                    return listFunction.andThen(TreeSet::new);
                 }
 
                 for (Constructor constructor : returnClazz.getConstructors()) {
