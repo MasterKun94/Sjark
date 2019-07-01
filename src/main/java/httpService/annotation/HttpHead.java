@@ -19,5 +19,8 @@ public @interface HttpHead {
      * 请确保添加 javac 的编译参数 -parameters ，不然会识别不了参数的名称。
      *
      */
+    @Alias("name")
     String value() default "";
+
+    String name() default "";
 }

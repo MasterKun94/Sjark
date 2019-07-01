@@ -17,7 +17,10 @@ public @interface HttpMapping {
      * {@code @HttpPathVariable}
      *
      */
+    @Alias("path")
     String value() default "";
+
+    String path() default "";
 
     /**
      * 请求类型，有 GET, POST, PUT, DELETE 四个可选项

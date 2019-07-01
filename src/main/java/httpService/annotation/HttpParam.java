@@ -21,5 +21,8 @@ public @interface HttpParam {
      *
      * @return http 参数中的key名称
      */
+    @Alias("name")
     String value() default "";
+
+    String name() default "";
 }

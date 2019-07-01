@@ -21,5 +21,8 @@ public @interface HttpPathVariable {
      *
      * @return url 中的变量名
      */
+    @Alias("name")
     String value() default "";
+
+    String name() default "";
 }
