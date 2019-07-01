@@ -38,12 +38,7 @@ public class RpcGenerator {
                 httpMethod = rpcService.method();
             }
             if (tailUrl == null) {
-                StringBuilder stringBuilder = new StringBuilder()
-                        .append("/").append(method.getName());
-                for (Object arg : args) {
-                    stringBuilder.append(".").append(arg.getClass().getName());
-                }
-                tailUrl = stringBuilder.toString();
+                tailUrl = "/" + method.getName();
             }
             return connector.connect(headUrl + tailUrl, httpMethod, args, method.getReturnType());
         }

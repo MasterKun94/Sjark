@@ -1,6 +1,6 @@
 package rpcTool;
 
-import jdk.internal.jline.internal.Nullable;
+import com.sun.istack.internal.Nullable;
 
 public class DefaultRpcConnector implements RpcConnector {
     @Override
