@@ -16,14 +16,14 @@ public class TupleMapCollector<K, V> implements TupleCollector<K, V> {
     }
 
     @Override
-    public TupleCollector<K, V> foldByKey(BinaryOperator<V> operator) {
+    public TupleCollector<K, V> reduceByKey(BinaryOperator<V> accumulator) {
         return this;
     }
 
     @Override
     public <R> TupleCollector<K, R> reduceByKey(
             Function<? super V, ? extends R> function,
-            BiFunction<? super R, ? super V, ? extends R> combiner)
+            BiFunction<? super R, ? super V, ? extends R> accumulator)
     {
         return mapValues(function);
     }

@@ -1,12 +1,11 @@
 package futureUtil;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
-public class MultiTaskWorker<T> implements MultiTask<T> {
+public class MultiTaskWorker<T> implements MultiTaskPool<T> {
     private final ConcurrentMap<CompletableFuture<T>, String> futureMap;
     private final ConcurrentMap<String, BlockingQueue<T>> queueMap;
     private final Supplier<BlockingQueue<T>> queueGenerator;

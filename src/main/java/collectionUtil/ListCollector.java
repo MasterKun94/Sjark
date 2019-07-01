@@ -99,7 +99,7 @@ public class ListCollector<T> implements Collector<T> {
     }
 
     @Override
-    public <K> Collector<T> foldBy(
+    public <K> Collector<T> reduceBy(
             Function<? super T, ? extends K> keyGetter,
             BinaryOperator<T> accumulator)
     {
@@ -114,10 +114,31 @@ public class ListCollector<T> implements Collector<T> {
     }
 
     @Override
-    public <R> R reduce(R r, BiFunction<? super R, ? super T, ? extends R> biFunction) {
-        R init = r;
+    public <R> R reduce(Function<T, R> idMapper, BiFunction<? super R, ? super T, ? extends R> accumulator) {
+        R result = null;
+        boolean isFirst = true;
         for (T element : contents) {
-            init = biFunction.apply(init, element);
+            if (isFirst) {
+                result = idMapper.apply(element);
+                isFirst = false;
+            } else {
+                result = accumulator.apply(result, element);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public T reduce(BinaryOperator<T> accumulator) {
+        T init = null;
+        boolean isFirst = true;
+        for (T element : contents) {
+            if (isFirst) {
+                init = element;
+                isFirst = false;
+            } else {
+                init = accumulator.apply(init, element);
+            }
         }
         return init;
     }

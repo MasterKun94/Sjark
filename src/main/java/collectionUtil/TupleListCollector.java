@@ -16,9 +16,9 @@ public class TupleListCollector<K, V> implements TupleCollector<K, V> {
     }
 
     @Override
-    public TupleCollector<K, V> foldByKey(BinaryOperator<V> combiner) {
+    public TupleCollector<K, V> reduceByKey(BinaryOperator<V> accumulator) {
         Map<K, V> krMap = new HashMap<>();
-        BinaryOperator<V> operator = (oldV, newV) -> oldV == null ? newV : combiner.apply(oldV, newV);
+        BinaryOperator<V> operator = (oldV, newV) -> oldV == null ? newV : accumulator.apply(oldV, newV);
         for (int i = 0; i < first.size(); i++) {
             krMap.merge(first.get(i), second.get(i), operator);
         }
@@ -28,13 +28,13 @@ public class TupleListCollector<K, V> implements TupleCollector<K, V> {
     @Override
     public <R> TupleCollector<K, R> reduceByKey(
             Function<? super V, ? extends R> function,
-            BiFunction<? super R, ? super V, ? extends R> combiner)
+            BiFunction<? super R, ? super V, ? extends R> accumulator)
     {
         Map<K, R> krMap = new HashMap<>();
         for (int i = 0; i < first.size(); i++) {
             V v = second.get(i);
             krMap.compute(first.get(i), ((k, r) -> {
-                r = r == null ? function.apply(v) : combiner.apply(r, v);
+                r = r == null ? function.apply(v) : accumulator.apply(r, v);
                 return r;
             }));
         }

@@ -1,4 +1,4 @@
-package httpClientBuilder;
+package httpService.builder;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
