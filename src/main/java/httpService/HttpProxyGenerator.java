@@ -26,6 +26,7 @@ import java.util.function.Function;
 /**
  * http请求代理生成器，
  */
+@SuppressWarnings("unchecked")
 public class HttpProxyGenerator {
     private static final RemoteConnector connector = new DefaultRemoteConnector();
     private final InvocationHandler httpProxy = new HttpProxy();
@@ -59,11 +60,10 @@ public class HttpProxyGenerator {
      * @param <T> 代理对象的类型
      * @return 一个实例化的代理对象
      */
-    @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clazz) {
         if (clazz.isAnnotationPresent(ContentPath.class)) {
             ContentPath contentPath = clazz.getAnnotation(ContentPath.class);
-            headUrl = (String) AliasUtil.parse(contentPath, "path");
+            headUrl = AliasUtil.parse(contentPath, "path");
             if (headUrl.startsWith("http:/")) {
                 headUrl = headUrl.substring("http:/".length());
             }
@@ -77,7 +77,6 @@ public class HttpProxyGenerator {
                 httpProxy);
     }
 
-    @SuppressWarnings("unchecked")
     private class HttpProxy implements InvocationHandler {
         private Map<Method, Function<Object[], Object>> methodMap = new HashMap<>();
 
