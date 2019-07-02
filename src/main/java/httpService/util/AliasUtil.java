@@ -3,7 +3,6 @@ package httpService.util;
 import httpService.annotation.Alias;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class AliasUtil {
