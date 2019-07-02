@@ -18,5 +18,8 @@ public @interface ContentPath {
      * {@code @HttpPathVariable}
      *
      */
+    @Alias("path")
     String value() default "";
+
+    String path() default "";
 }

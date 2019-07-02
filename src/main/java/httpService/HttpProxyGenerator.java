@@ -1,12 +1,8 @@
 package httpService;
 
 import com.alibaba.fastjson.JSON;
-import httpService.annotation.ContentPath;
-import httpService.annotation.HttpBody;
-import httpService.annotation.HttpHead;
-import httpService.annotation.HttpMapping;
-import httpService.annotation.HttpParam;
-import httpService.annotation.HttpPathVariable;
+import httpService.annotation.*;
+import httpService.util.AliasUtil;
 import httpService.util.DefaultRemoteConnector;
 import httpService.util.RemoteConnector;
 import httpService.util.UrlParser;
@@ -66,10 +62,10 @@ public class HttpProxyGenerator {
     @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clazz) {
         if (clazz.isAnnotationPresent(ContentPath.class)) {
-            ContentPath rpcService = clazz.getAnnotation(ContentPath.class);
-            headUrl = rpcService.value();
-            if (headUrl.startsWith("http://")) {
-                headUrl = headUrl.substring("http://".length());
+            ContentPath contentPath = clazz.getAnnotation(ContentPath.class);
+            headUrl = (String) AliasUtil.parse(contentPath, "path");
+            if (headUrl.startsWith("http:/")) {
+                headUrl = headUrl.substring("http:/".length());
             }
         } else {
             headUrl = "";
@@ -96,9 +92,9 @@ public class HttpProxyGenerator {
             String tailUrl;
             HttpMethod httpMethod;
             if (method.isAnnotationPresent(HttpMapping.class)) {
-                HttpMapping rpcService = method.getAnnotation(HttpMapping.class);
-                httpMethod = rpcService.method();
-                tailUrl = rpcService.value();
+                HttpMapping httpMapping = method.getAnnotation(HttpMapping.class);
+                httpMethod = httpMapping.method();
+                tailUrl = (String) AliasUtil.parse(httpMapping, "path");
                 if (!tailUrl.startsWith("/")) {
                     tailUrl = "/" + tailUrl;
                 }
@@ -138,26 +134,18 @@ public class HttpProxyGenerator {
                         } else {
                             throw new IllegalArgumentException("HttpBody 只能存在一个");
                         }
-                    } else if (annotation instanceof HttpParam) {
-
-                        String key = ((HttpParam) annotation).value();
+                    } else {
+                        String key = (String) AliasUtil.parse(annotation, "name");
                         if ("".equals(key)) {
                             key = parameter.getName();
                         }
-                        paramIndexMap.put(key, i);
-                    } else if (annotation instanceof HttpHead) {
-
-                        String key = ((HttpHead) annotation).value();
-                        if ("".equals(key)) {
-                            key = parameter.getName();
+                        if (annotation instanceof HttpParam) {
+                            paramIndexMap.put(key, i);
+                        } else if (annotation instanceof HttpHead) {
+                            headersIndexMap.put(key, i);
+                        } else if (annotation instanceof HttpPathVariable) {
+                            pathVarMap.put(key, i);
                         }
-                        headersIndexMap.put(key, i);
-                    } else if (annotation instanceof HttpPathVariable) {
-                        String name = ((HttpPathVariable) annotation).value();
-                        if ("".equals(name)) {
-                            name = parameter.getName();
-                        }
-                        pathVarMap.put(name, i);
                     }
             }
 
