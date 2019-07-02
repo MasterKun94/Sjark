@@ -94,7 +94,7 @@ public class HttpProxyGenerator {
             if (method.isAnnotationPresent(HttpMapping.class)) {
                 HttpMapping httpMapping = method.getAnnotation(HttpMapping.class);
                 httpMethod = httpMapping.method();
-                tailUrl = (String) AliasUtil.parse(httpMapping, "path");
+                tailUrl = AliasUtil.parse(httpMapping, "path");
                 if (!tailUrl.startsWith("/")) {
                     tailUrl = "/" + tailUrl;
                 }
@@ -135,7 +135,7 @@ public class HttpProxyGenerator {
                             throw new IllegalArgumentException("HttpBody 只能存在一个");
                         }
                     } else {
-                        String key = (String) AliasUtil.parse(annotation, "name");
+                        String key = AliasUtil.parse(annotation, "name");
                         if ("".equals(key)) {
                             key = parameter.getName();
                         }

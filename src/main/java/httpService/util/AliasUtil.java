@@ -3,34 +3,36 @@ package httpService.util;
 import httpService.annotation.Alias;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class AliasUtil {
-    public static  Object parse(Annotation annotation, String method) {
-        Class<? extends Annotation> clazz = annotation.annotationType();
+
+    @SuppressWarnings("unchecked")
+    public static <T> T parse(Annotation annotation, String method) {
         try {
+            Class<? extends Annotation> clazz = annotation.annotationType();
             Method requestMethod = clazz.getMethod(method);
             Object defaultValue = requestMethod.getDefaultValue();
             Object anotherValue = requestMethod.invoke(annotation);
             if (!anotherValue.equals(defaultValue)) {
-                return anotherValue;
+                return (T) anotherValue;
             }
-            for (Method method1 : clazz.getMethods()) {
-                if (method1.isAnnotationPresent(Alias.class)) {
-                    if (method1.getAnnotation(Alias.class).value().equals(method)) {
-                        anotherValue = method1.invoke(annotation);
+            for (Method aliasMethod : clazz.getMethods()) {
+                if (aliasMethod.isAnnotationPresent(Alias.class)) {
+                    Alias alias = aliasMethod.getAnnotation(Alias.class);
+                    if (alias.value().equals(method)) {
+                        anotherValue = aliasMethod.invoke(annotation);
                         if (!anotherValue.equals(defaultValue) &&
-                                !anotherValue.equals(method1.getDefaultValue())) {
-                            return anotherValue;
+                            !anotherValue.equals(aliasMethod.getDefaultValue())) {
+                            return (T) anotherValue;
                         }
                     }
                 }
             }
-            return defaultValue;
-        } catch (Exception e) {
+            return (T) defaultValue;
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
-
     }
-
 }
