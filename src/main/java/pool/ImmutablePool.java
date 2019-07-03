@@ -187,8 +187,13 @@ public  class ImmutablePool<T> implements Pool<T> {
                 Node rightNode = nodeStack.pop();
                 Node leftNode = nodeStack.pop();
 
-                Node parentNode = new Node(leftNode.getStart(), rightNode.getEnd(), leftNode, rightNode);
-                parentNode.setAvailableAmount(leftNode.getAvailableAmount() + rightNode.getAvailableAmount());
+                Node parentNode = new Node(
+                        leftNode.getStart(),
+                        rightNode.getEnd(),
+                        leftNode,
+                        rightNode);
+                int i = leftNode.getAvailableAmount() + rightNode.getAvailableAmount();
+                parentNode.setAvailableAmount(i);
                 intStack.push(integer << 1);
                 nodeStack.push(parentNode);
                 refresh(nodeStack, intStack);
