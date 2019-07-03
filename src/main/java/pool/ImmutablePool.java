@@ -272,7 +272,7 @@ public  class ImmutablePool<T> implements Pool<T> {
                 }
                 idx2--;
             }
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("该对象不在对象池中");
         }
     }
 }
