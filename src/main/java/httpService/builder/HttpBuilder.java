@@ -1,6 +1,7 @@
 package httpService.builder;
 
 import org.apache.commons.codec.Charsets;
+import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
@@ -23,15 +24,18 @@ public class HttpBuilder {
     private StringBuilder urlBuilder;
     private boolean haveParam;
 
-    private static HttpBuilder start(HttpRequestBase request, String url) {
+    public HttpBuilder(HttpRequestBase request, String url) {
+        this.request = request;
+        this.urlBuilder = new StringBuilder();
+        if (url.startsWith("http://")) {
+            urlBuilder.append(url);
+        } else {
+            urlBuilder.append("http://").append(url);
+        }
+    }
 
-        HttpBuilder builder = new HttpBuilder();
-        StringBuilder stringBuilder = new StringBuilder();
-        builder.urlBuilder = url.startsWith("http://") ?
-                stringBuilder.append(url) :
-                stringBuilder.append("http://").append(url);
-        builder.request = request;
-        return builder;
+    private static HttpBuilder start(HttpRequestBase request, String url) {
+        return new HttpBuilder(request, url);
     }
 
     public static HttpBuilder post(String url) {
