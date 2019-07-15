@@ -27,11 +27,11 @@ public class HttpBuilder {
     public HttpBuilder(HttpRequestBase request, String url) {
         this.request = request;
         this.urlBuilder = new StringBuilder();
-        if (url.startsWith("http://")) {
+//        if (url.startsWith("http://")) {
             urlBuilder.append(url);
-        } else {
-            urlBuilder.append("http://").append(url);
-        }
+//        } else {
+//            urlBuilder.append("http://").append(url);
+//        }
     }
 
     private static HttpBuilder start(HttpRequestBase request, String url) {

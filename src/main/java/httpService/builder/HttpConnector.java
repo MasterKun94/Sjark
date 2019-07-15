@@ -18,7 +18,12 @@ public class HttpConnector<T> {
 
     public T execute(HttpUriRequest request) {
         if (httpClient == null) httpClient = InstanceHttpClient.getDefault();
-        if (httpHost == null) httpHost = URIUtils.extractHost(request.getURI());
+        if (httpHost == null) {
+            httpHost = URIUtils.extractHost(request.getURI());
+            if (httpHost == null) {
+                httpHost = new HttpHost("http");
+            }
+        }
         org.apache.http.client.ResponseHandler<T> responseHandler = response -> {
             try {
                 return this.responseHandler.handleResponse(request, response);
