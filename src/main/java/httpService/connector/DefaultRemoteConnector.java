@@ -1,9 +1,9 @@
-package httpService.util;
+package httpService.connector;
 
 import com.alibaba.fastjson.JSON;
 import httpService.HttpMethod;
-import httpService.builder.HttpBuilder;
-import httpService.builder.HttpConnector;
+import httpService.connector.builder.HttpBuilder;
+import httpService.connector.builder.HttpConnector;
 import org.apache.http.util.EntityUtils;
 
 import java.util.Map;

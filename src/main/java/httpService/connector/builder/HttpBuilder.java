@@ -1,4 +1,4 @@
-package httpService.builder;
+package httpService.connector.builder;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.http.client.methods.*;

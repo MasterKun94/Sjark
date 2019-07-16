@@ -1,4 +1,4 @@
-package httpService.util;
+package httpService.connector;
 
 import httpService.HttpMethod;
 

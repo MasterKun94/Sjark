@@ -3,8 +3,8 @@ package httpService;
 import com.alibaba.fastjson.JSON;
 import httpService.annotation.*;
 import httpService.util.AliasUtil;
-import httpService.util.DefaultRemoteConnector;
-import httpService.util.RemoteConnector;
+import httpService.connector.DefaultRemoteConnector;
+import httpService.connector.RemoteConnector;
 import httpService.util.UrlParser;
 
 import java.lang.annotation.Annotation;
@@ -70,6 +70,7 @@ public class HttpProxyGenerator {
         } else {
             headUrl = "";
         }
+
         Class[] classes = new Class[] {clazz};
         return (T) Proxy.newProxyInstance(
                 HttpProxy.class.getClassLoader(),
@@ -82,6 +83,7 @@ public class HttpProxyGenerator {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) {
+
             return methodMap.computeIfAbsent(method, k -> init(method)).apply(args);
         }
 
