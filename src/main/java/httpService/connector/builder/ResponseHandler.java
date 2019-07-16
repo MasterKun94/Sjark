@@ -10,7 +10,6 @@ public interface ResponseHandler<T> {
     T handleResponse(HttpRequest request, HttpResponse response) throws IOException;
 
     default T handleException(HttpRequest request, Exception e) {
-        e.printStackTrace();
-        return null;
+        throw new RuntimeException(e);
     }
 }

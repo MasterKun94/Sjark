@@ -1,5 +1,6 @@
 package pool;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -23,8 +24,9 @@ public  class ImmutablePool<T> implements Pool<T> {
         Map<T, Integer> map = new TreeMap<>(Comparator.comparingInt(Object::hashCode));
         try {
             T t;
+            Constructor<T> constructor = clazz.getConstructor();
             for (int i = 0; i < capacity; i++) {
-                t = clazz.getConstructor().newInstance();
+                t = constructor.newInstance();
                 elements[i] = t;
                 map.put(t, i);
             }

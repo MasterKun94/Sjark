@@ -49,20 +49,4 @@ class Node {
     int decrementAndGetAmount() {
         return availableAmount.decrementAndGet();
     }
-
-//    @Override
-//    public String toString() {
-//        StringBuilder sb = new StringBuilder();
-//        for (int i = 0; i < layer; i++) {
-//            sb.append("\t");
-//        }
-//        String tab = sb.toString();
-//        return "{\n" + tab + "\t\"start\" : " + this.getStart() +
-//                ", \n" + tab + "\t\"end\" : " + this.getEnd() +
-//                ", \n" + tab + "\t\"layer\" : " + this.getLayer() +
-//                ", \n" + tab + "\t\"availableAmount\" : " + this.getAvailableAmount() +
-//                ", \n" + tab + "\t\"left\" : " + this.getLeft() +
-//                ", \n" + tab + "\t\"right\" : " + this.getRight() +
-//                "\n" + tab + "}";
-//    }
 }
